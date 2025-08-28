@@ -1,0 +1,11 @@
+{
+    "SCAN_INTERVAL": 3600,
+    "TOP_N_SIGNALS": 5,
+    "MAX_LOSS_PCT": -15.0,
+    "TP_PERCENT": 0.3,
+    "SL_PERCENT": 0.1,
+    "LEVERAGE": 10,
+    "RISK_PCT": 0.01,
+    "VIRTUAL_BALANCE": 100.0,
+    "ENTRY_BUFFER_PCT": 0.002
+}
