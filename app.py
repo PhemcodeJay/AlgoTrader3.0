@@ -22,7 +22,7 @@ def format_currency_safe(value: Optional[float]) -> str:
 def load_virtual_balance() -> Dict[str, float]:
     """Load virtual balance (placeholder implementation)"""
     try:
-        return {"capital": 10000.0, "available": 10000.0}
+        return {"capital": 100.0, "available": 100.0}
     except Exception as e:
         logger.error(f"Error loading virtual balance: {e}")
         return {"capital": 100.0, "available": 100.0}
