@@ -15,11 +15,11 @@ logging.basicConfig(level=logging.INFO)
 # Constants from utils.py
 RISK_PCT = 0.01
 ACCOUNT_BALANCE = 100.0
-LEVERAGE = 20
+LEVERAGE = 10
 ENTRY_BUFFER_PCT = 0.002
 MIN_VOLUME = 1000
 MIN_ATR_PCT = 0.001
-RSI_ZONE = (20, 80)
+RSI_ZONE = (30, 70)
 INTERVALS = ['15', '60', '240']
 MAX_SYMBOLS = 50
 TP_PERCENT = 0.015

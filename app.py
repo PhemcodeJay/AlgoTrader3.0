@@ -14,6 +14,10 @@ from views.portfolio import show_portfolio
 from views.automation import show_automation
 from views.logs import show_logs
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Utility functions
 def format_currency_safe(value: Optional[float]) -> str:
     """Format currency safely"""
@@ -32,27 +36,8 @@ def load_virtual_balance() -> Dict[str, float]:
 # Ensure UTF-8 output
 sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
-
-# Page configuration
-st.set_page_config(
-    page_title="AlgoTrader Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Custom CSS for modern, colorful styling
-st.markdown("""
+CSS = """
     <style>
     .stApp {
         background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
@@ -107,7 +92,7 @@ st.markdown("""
         color: #a0a0c0;
     }
     </style>
-""", unsafe_allow_html=True)
+"""
 
 # Initialize components safely
 @st.cache_resource
@@ -155,9 +140,31 @@ def init_session_state():
 
 def main():
     """Main application function"""
-    init_session_state()
-
     try:
+        # Page configuration (must be first Streamlit command)
+        st.set_page_config(
+            page_title="AlgoTrader Dashboard",
+            page_icon="📈",
+            layout="wide",
+            initial_sidebar_state="expanded"
+        )
+
+        # Configure logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('app.log'),
+                logging.StreamHandler()
+            ]
+        )
+        logger = logging.getLogger(__name__)
+
+        # Apply custom CSS
+        st.markdown(CSS, unsafe_allow_html=True)
+
+        init_session_state()
+
         db, engine, client, automated_trader = init_components()
 
         if not db or not engine:

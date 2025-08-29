@@ -17,7 +17,7 @@ try:
     settings = load_settings()
     RISK_PCT = settings.get('RISK_PCT', 0.01)
     ACCOUNT_BALANCE = settings.get('VIRTUAL_BALANCE', 100.0)
-    LEVERAGE = settings.get('LEVERAGE', 20)
+    LEVERAGE = settings.get('LEVERAGE', 10)
     ENTRY_BUFFER_PCT = settings.get('ENTRY_BUFFER_PCT', 0.002)
 except ImportError:
     RISK_PCT = 0.01

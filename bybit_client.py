@@ -41,10 +41,6 @@ from db import db_manager
 VIRTUAL_TRADES_FILE = "virtual_trades.json"
 CAPITAL_FILE = "capital.json"
 
-import json
-import logging
-import portalocker
-
 logger = logging.getLogger(__name__)
 
 def _load_json_file(path: str, default):
