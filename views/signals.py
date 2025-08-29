@@ -1,7 +1,7 @@
 import streamlit as st
 import logging
 from datetime import datetime, timezone
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from bybit_client import BybitClient
 from engine import TradingEngine
 from db import db_manager
