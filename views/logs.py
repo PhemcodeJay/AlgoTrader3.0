@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
 # Custom CSS for modern, colorful styling
 st.markdown("""
@@ -120,7 +120,7 @@ def display_log_stats(log_file: str, container, refresh_key: str):
             container.warning("⚠️ No log file found or file is not readable")
             return
 
-        with open(log_file, "r") as f:
+        with open(log_file, "r", encoding="utf-8", errors="replace") as f:
             all_lines = f.readlines()
 
         # Count log levels
@@ -179,7 +179,7 @@ def show_logs():
             try:
                 log_file = "app.log"
                 if os.path.exists(log_file) and os.access(log_file, os.R_OK):
-                    with open(log_file, "r") as f:
+                    with open(log_file, "r", encoding="utf-8", errors="replace") as f:
                         lines = f.readlines()
                     if log_level != "ALL":
                         lines = [line for line in lines if log_level in line.upper()]

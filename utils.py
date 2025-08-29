@@ -632,8 +632,8 @@ def generate_real_signals(symbols: List[str], interval: str = "60", limit: int =
                 "symbol": symbol,
                 "side": side,
                 "entry_price": entry,
-                "tp_price": tp,
-                "sl_price": sl,
+                "tp": tp,
+                "sl": sl,
                 "trail": trail,
                 "liquidation": liq,
                 "qty": qty,
@@ -645,6 +645,7 @@ def generate_real_signals(symbols: List[str], interval: str = "60", limit: int =
                 "timeframe": interval,
                 "confidence": score,
                 "market": "Bybit",
+                "virtual": False,  # Enable real trades if client is connected
                 "indicators": {
                     "rsi": rsi,
                     "ema_9": ema_9,

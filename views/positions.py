@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List, Optional
 from bybit_client import BybitClient
 from engine import TradingEngine
-from db import db_manager
+from db import db_manager, Trade
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -144,6 +144,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 def show_positions(db, engine, client):
     """Position management with tabs and card-based layout"""
     st.title("💼 Position Management")
@@ -152,47 +153,57 @@ def show_positions(db, engine, client):
         st.error("🚨 Database connection not available")
         return
 
+    # === SESSION STATE INIT ===
+    if "closing" not in st.session_state:
+        st.session_state.closing = {}
+
     try:
-        # Define tabs
+        # === TABS ===
         form_tab, positions_tab = st.tabs(["🚀 Open Position", "📊 Positions"])
 
-        # Open Position Form tab
+        # === OPEN POSITION FORM TAB ===
         with form_tab:
             with st.container(border=True):
                 st.markdown("### Open New Position")
                 show_position_form(db, client, engine)
 
-        # Positions tab
+        # === POSITIONS TAB ===
         with positions_tab:
             st.subheader("📊 Open Positions")
             open_trades = get_open_trades_safe(db)
-            if open_trades:
+
+            if not open_trades:
+                st.info("📭 No open positions at the moment.")
+            else:
                 for i, trade in enumerate(open_trades):
                     with st.container(border=True):
                         try:
-                            symbol = getattr(trade, 'symbol', 'N/A')
+                            symbol = trade.symbol
                             current_price = get_current_price_safe(symbol, client)
-                            entry_price = float(getattr(trade, 'entry_price', 0))
-                            qty = float(getattr(trade, 'qty', 0))
-                            side = getattr(trade, 'side', 'N/A')
-                            leverage = getattr(trade, 'leverage', 1)
-                            margin_usdt = getattr(trade, 'margin_usdt', 0)
-                            tp_price = getattr(trade, 'take_profit', None)
-                            sl_price = getattr(trade, 'stop_loss', None)
-                            # Handle missing attributes
-                            trail_price = getattr(trade, 'trail', None)
+                            entry_price = float(trade.entry_price or 0)
+                            qty = float(trade.qty or 0)
+                            side = (trade.side or 'N/A').upper()
+                            leverage = trade.leverage or 1
+                            margin_usdt = trade.margin_usdt or 0
+                            tp_price = trade.take_profit or 0.0
+                            sl_price = trade.stop_loss or 0.0
                             liquidation_price = getattr(trade, 'liquidation', None)
+                            is_virtual = getattr(trade, 'virtual', True)
+                            order_id = trade.order_id
 
-                            # Calculate P&L
+                            # Calculate Unrealized PnL
                             if qty > 0:
-                                if side.upper() in ['BUY', 'LONG']:
-                                    unrealized_pnl = (current_price - entry_price) * qty
-                                else:
-                                    unrealized_pnl = (entry_price - current_price) * qty
+                                unrealized_pnl = (
+                                    (current_price - entry_price) * qty
+                                    if side in ['LONG', 'BUY']
+                                    else (entry_price - current_price) * qty
+                                )
                             else:
                                 unrealized_pnl = 0
 
-                            st.markdown(f"**{symbol} | {side} | {'🟢 Virtual' if getattr(trade, 'virtual', True) else '🔴 Real'}**")
+                            st.markdown(f"**{symbol} | {side} | {'🟢 Virtual' if is_virtual else '🔴 Real'}**")
+
+                            # === METRICS ===
                             col1, col2, col3, col4 = st.columns(4)
                             with col1:
                                 st.metric("Entry", f"${format_price_safe(entry_price)}")
@@ -204,50 +215,76 @@ def show_positions(db, engine, client):
                                 st.metric("P&L", f"${format_currency_safe(unrealized_pnl)}")
                                 st.metric("Margin", f"${format_currency_safe(margin_usdt)}")
                             with col4:
-                                st.markdown(f"**Leverage**: {leverage}x")
+                                st.markdown(f"**Leverage:** {leverage}x")
                                 st.metric("Liquidation", f"${format_price_safe(liquidation_price)}")
+                        except Exception as e:
+                            logger.error(f"Error displaying trade info: {e}")
+                            st.error(f"Error displaying trade info: {e}")
+
+                            # === ACTION CONTROLS ===
                             col1, col2, col3 = st.columns(3)
+
+                            # ❌ CLOSE POSITION BUTTON
                             with col1:
-                                if st.button("❌ Close Position", key=f"close_pos_{i}"):
+                                close_key = f"close_pos_{i}"
+                                if st.button("❌ Close Position", key=close_key):
+                                    st.session_state.closing[i] = True
+
+                                if st.session_state.closing.get(i, False):
                                     try:
-                                        order_id = getattr(trade, 'order_id', None)
                                         if order_id:
-                                            # Close trade using BybitClient
                                             result = client.close_position(symbol=symbol, side=side, qty=str(qty))
                                             if result:
-                                                # Update database with closed trade details
                                                 db.close_trade(
                                                     order_id=order_id,
                                                     exit_price=current_price,
                                                     pnl=unrealized_pnl
                                                 )
-                                                st.success(f"✅ Position {symbol} closed successfully")
-                                                st.rerun()
+                                                st.success(f"✅ {symbol} closed")
                                             else:
-                                                st.error("Failed to close position via client")
+                                                st.error("❌ Client failed to close position")
                                         else:
-                                            st.error("Cannot close position - missing order ID")
+                                            st.error("⚠️ Missing order ID")
                                     except Exception as e:
-                                        logger.error(f"Error closing position: {e}")
-                                        st.error(f"Error closing position: {e}")
+                                        logger.error(f"Close position error: {e}")
+                                        st.error(f"Error: {e}")
+                                    finally:
+                                        st.session_state.closing[i] = False
+                                        st.rerun()
+
+                            # 🎯 TP/SL UPDATER
                             with col2:
-                                if st.button("🎯 Update TP/SL", key=f"update_tpsl_{i}"):
-                                    st.info("🔧 TP/SL update feature coming soon")
+                                with st.expander("🎯 Update TP/SL"):
+                                    new_tp = st.number_input(
+                                        "New TP", min_value=0.0, value=tp_price, step=0.01, key=f"tp_{i}")
+                                    new_sl = st.number_input(
+                                        "New SL", min_value=0.0, value=sl_price, step=0.01, key=f"sl_{i}")
+                                    if st.button("💾 Save TP/SL", key=f"save_tpsl_{i}"):
+                                        try:
+                                            with db.get_session() as session:
+                                                t = session.query(Trade).filter_by(id=trade.id).first()
+                                                if t:
+                                                    t.take_profit = new_tp
+                                                    t.stop_loss = new_sl
+                                                    session.commit()
+                                                    st.success("✅ TP/SL updated")
+                                                    st.rerun()
+                                        except Exception as e:
+                                            logger.error(f"TP/SL update failed: {e}")
+                                            st.error("❌ Failed to update TP/SL")
+
+                            # ℹ️ TRADE MODE INFO
                             with col3:
-                                mode_color = "🟢" if getattr(trade, 'virtual', True) else "🔴"
-                                mode_text = "Virtual" if getattr(trade, 'virtual', True) else "Real"
-                                st.info(f"{mode_color} {mode_text} Trade")
-                        except Exception as e:
-                            logger.error(f"Error processing trade: {e}")
-                            st.error(f"Error displaying trade {i}: {e}")
-            else:
-                display_trades_table(open_trades, st)
+                                st.info(f"{'🟢' if is_virtual else '🔴'} {'Virtual' if is_virtual else 'Real'} Trade")
+
+            # 🔄 Refresh
             if st.button("🔄 Refresh Positions", key="refresh_positions"):
                 st.rerun()
 
     except Exception as e:
-        logger.error(f"Error in positions: {e}")
-        st.error(f"Positions error: {str(e)}")
+        logger.error(f"Position tab error: {e}")
+        st.error(f"Unexpected error: {e}")
+
 
 def show_position_form(db, client, engine):
     col1, col2, col3 = st.columns(3)

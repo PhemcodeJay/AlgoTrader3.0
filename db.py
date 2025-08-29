@@ -16,6 +16,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 # Load .env file if it exists
 load_dotenv()
 
@@ -81,6 +82,8 @@ class Trade(Base):
     order_id: Mapped[str] = mapped_column(String)
     unrealized_pnl: Mapped[float] = mapped_column(Float, default=0.0)
     virtual: Mapped[bool] = mapped_column(Boolean, default=True)
+    strategy: Mapped[str] = mapped_column(String, default="Auto")
+    score: Mapped[float] = mapped_column(Float)
 
     def to_dict(self) -> Dict:
         return {
@@ -100,6 +103,8 @@ class Trade(Base):
             "order_id": self.order_id,
             "unrealized_pnl": self.unrealized_pnl,
             "virtual": self.virtual,
+            "strategy": self.strategy,
+            "score": self.score,
         }
 
 class Portfolio(Base):

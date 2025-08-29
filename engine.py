@@ -4,6 +4,7 @@ import pandas as pd
 import time
 import json
 import logging
+import uuid
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from typing import Any, List, Union, Optional
@@ -23,7 +24,7 @@ DEFAULT_TOP_N_SIGNALS = int(os.getenv("DEFAULT_TOP_N_SIGNALS", 5))
 
 class TradingEngine:
     def __init__(self):
-        logger.info("[Engine] 🚀 Initializing TradingEngine...")
+        logger.info("[Engine] Initializing TradingEngine...")
         self.client = BybitClient()
         self.db = db_manager
         self.capital_file = "capital.json"
@@ -47,7 +48,7 @@ class TradingEngine:
             return usdt_symbols[:50]  # Return top 50 symbols
         except Exception as e:
             logger.error(f"Error getting USDT symbols: {e}")
-            return ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "XRPUSDT"]
+            return ["BTCUSDT", "ETHUSDT", "DOGEUSDT", "SOLUSDT", "XRPUSDT"]
 
     def get_open_real_trades(self):
         """Get open real trades"""
@@ -119,7 +120,7 @@ class TradingEngine:
             from utils import get_ticker_snapshot
             ticker_data = get_ticker_snapshot()
             if ticker_data:
-                logger.info(f"✅ Retrieved real-time data for {len(ticker_data)} symbols")
+                logger.info(f" Retrieved real-time data for {len(ticker_data)} symbols")
             return ticker_data
         except Exception as e:
             logger.error(f"Error getting real-time ticker data: {e}")
@@ -132,34 +133,31 @@ class TradingEngine:
 
     def run_once(self):
         """Generate real trading signals using market data"""
-        logger.info("[Engine] 🔍 Scanning market...\n")
+        logger.info("[Engine] Automated Trading Starting...\n")
         signals = []
-        
+
         try:
-            # Import the real signal generation function
             from utils import generate_real_signals
-            
-            # Get active trading symbols
-            symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "DOGEUSDT", "AVAXUSDT"]
-            
-            # Generate real signals using market data
+            symbols = ["BTCUSDT", "ETHUSDT", "DOGEUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "AVAXUSDT"]
             real_signals = generate_real_signals(symbols, interval="60")
-            
-            # Save signals to database
+
             for signal in real_signals:
                 try:
-                    # Calculate trail and liquidation prices
+                    if not all(key in signal for key in ["symbol", "side", "entry_price", "tp", "sl", "score", "strategy"]):
+                        logger.warning(f"Skipping signal due to missing required fields: {signal}")
+                        continue
+
                     entry_price = signal["entry_price"]
-                    leverage = signal["leverage"]
+                    leverage = signal.get("leverage", 10)  # Default leverage to 10 if not provided
                     side = signal["side"]
-                    
+
                     if side == "Buy":
-                        trail_price = entry_price + (signal["tp_price"] - entry_price) * 0.5
-                        liquidation_price = entry_price * (1 - 0.8 / leverage)  # 80% margin level
+                        trail_price = entry_price + (signal["tp"] - entry_price) * 0.5
+                        liquidation_price = entry_price * (1 - 0.8 / leverage)
                     else:
-                        trail_price = entry_price - (entry_price - signal["tp_price"]) * 0.5
+                        trail_price = entry_price - (entry_price - signal["tp"]) * 0.5
                         liquidation_price = entry_price * (1 + 0.8 / leverage)
-                    
+
                     signal_data = {
                         "symbol": signal["symbol"],
                         "interval": "1h",
@@ -174,23 +172,22 @@ class TradingEngine:
                         "strategy": signal["strategy"],
                         "side": "LONG" if signal["side"] == "Buy" else "SHORT",
                         "entry": signal["entry_price"],
-                        "tp": signal["tp_price"],
-                        "sl": signal["sl_price"],
+                        "tp": signal["tp"],
+                        "sl": signal["sl"],
                         "trail": trail_price,
                         "liquidation": liquidation_price,
-                        "leverage": signal["leverage"],
-                        "margin_usdt": signal["margin_usdt"]
+                        "leverage": leverage,
+                        "margin_usdt": signal.get("margin_usdt", 15.0)  # Default margin_usdt if not provided
                     }
-                    
+
                     self.db.add_signal(signal_data)
                     signals.append(signal)
-                    
+
                 except Exception as e:
-                    logger.error(f"Error saving signal for {signal.get('symbol')}: {e}")
-                    
-            # If no real signals generated, create a few demo signals
+                    logger.error(f"Error saving signal for {signal.get('symbol', 'Unknown')}: {e}")
+
             if not signals:
-                for symbol in symbols[:3]:  # Just use first 3 symbols
+                for symbol in symbols[:3]:
                     try:
                         current_price = self.client.get_current_price(symbol)
                         if current_price > 0:
@@ -198,18 +195,18 @@ class TradingEngine:
                                 "symbol": symbol,
                                 "side": "Buy",
                                 "entry_price": current_price,
-                                "tp_price": current_price * 1.025,
-                                "sl_price": current_price * 0.985,
+                                "tp": current_price * 1.025,
+                                "sl": current_price * 0.985,
                                 "score": 65,
                                 "strategy": "Fallback Demo",
                                 "leverage": 10,
                                 "margin_usdt": 15,
                                 "qty": 15 / current_price
                             }
-                            
-                            trail_price = current_price * 1.0125  # 50% of TP distance
-                            liquidation_price = current_price * (1 - 0.8 / 10)  # 80% margin level at 10x leverage
-                            
+
+                            trail_price = current_price * 1.0125
+                            liquidation_price = current_price * (1 - 0.8 / 10)
+
                             signal_data = {
                                 "symbol": symbol,
                                 "interval": "1h",
@@ -226,19 +223,97 @@ class TradingEngine:
                                 "leverage": 10,
                                 "margin_usdt": 15.0
                             }
-                            
+
                             self.db.add_signal(signal_data)
                             signals.append(signal)
-                            
+
                     except Exception as e:
                         logger.error(f"Error creating demo signal for {symbol}: {e}")
-                        
+
         except Exception as e:
             logger.error(f"Error in signal generation: {e}")
             signals = []
-                
-        logger.info(f"[Engine] ✅ Generated {len(signals)} signals")
+
+        logger.info(f"[Engine] Signals Generated {len(signals)} signals")
         return signals
+
+    def execute_signal(self, signal: dict) -> Optional[dict]:
+        """
+        Execute a signal by placing a trade or simulating execution.
+        """
+        try:
+            symbol = signal.get("symbol")
+            side = signal.get("side", "Buy")
+            entry = signal.get("entry_price") or signal.get("entry")
+            qty = signal.get("qty") or signal.get("quantity") or 0.0
+            leverage = signal.get("leverage", 10)
+            virtual = signal.get("virtual", True)
+            take_profit = signal.get("tp")
+            stop_loss = signal.get("sl")
+            margin_usdt = signal.get("margin_usdt", 15.0)
+
+            if not symbol or not entry or not qty:
+                logger.warning(f"⚠️ Invalid signal for execution: {signal}")
+                return None
+
+            if self.client.is_connected() and not virtual:
+                # Real mode: Place order via BybitClient
+                order_result = self.client.place_order(
+                    symbol=symbol,
+                    side=side,
+                    order_type="Market",  # Use Market order for simplicity
+                    qty=qty,
+                    price=entry,
+                    stop_loss=stop_loss,
+                    take_profit=take_profit
+                )
+
+                if not order_result:
+                    logger.error(f"Failed to place order for {symbol}")
+                    return None
+
+                trade_data = {
+                    "symbol": symbol,
+                    "side": side,
+                    "entry_price": round(order_result.get("price", entry), 6),
+                    "take_profit": order_result.get("takeProfit"),
+                    "stop_loss": order_result.get("stopLoss"),
+                    "qty": order_result.get("qty", qty),
+                    "leverage": leverage,
+                    "margin_usdt": margin_usdt,
+                    "strategy": signal.get("strategy", "Unknown"),
+                    "score": signal.get("score", 0),
+                    "status": order_result.get("status", "open"),
+                    "virtual": False,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "order_id": order_result.get("order_id")
+                }
+            else:
+                # Virtual mode: Simulate trade and store in DB
+                trade_data = {
+                    "symbol": symbol,
+                    "side": side,
+                    "entry_price": round(entry, 6),
+                    "take_profit": take_profit,
+                    "stop_loss": stop_loss,
+                    "qty": qty,
+                    "leverage": leverage,
+                    "margin_usdt": margin_usdt,
+                    "strategy": signal.get("strategy", "Unknown"),
+                    "score": signal.get("score", 0),
+                    "status": "open",
+                    "virtual": True,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "order_id": str(uuid.uuid4())  # Generate unique order_id for virtual trades
+                }
+
+            self.db.add_trade(trade_data)
+            logger.info(f"Executed signal: {symbol} | Side: {side} | Qty: {qty} | Virtual: {virtual}")
+            return trade_data
+
+        except Exception as e:
+            logger.error(f"❌ Error executing signal: {e}")
+            return None
 
     def load_capital(self, mode="all"):
         """Load capital from JSON file"""
@@ -271,3 +346,6 @@ class TradingEngine:
                 json.dump(all_capital, f, indent=4)
         except Exception as e:
             logger.error(f"Error saving capital: {e}")
+
+    def is_connected(self) -> bool:
+        return self.client is not None
