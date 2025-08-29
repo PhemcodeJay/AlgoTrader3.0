@@ -22,7 +22,7 @@ try:
 except ImportError:
     RISK_PCT = 0.01
     ACCOUNT_BALANCE = 100.0
-    LEVERAGE = 20
+    LEVERAGE = 10
     ENTRY_BUFFER_PCT = 0.002
 
 MIN_VOLUME = 1000

@@ -236,8 +236,8 @@ class TradingEngine:
 
         logger.info(f"[Engine] Signals Generated {len(signals)} signals")
         return signals
-
-    def execute_signal(self, signal: dict) -> Optional[dict]:
+    
+    def execute_signal(self, signal: dict, trading_mode: str = "real") -> Optional[dict]:
         """
         Execute a signal by placing a trade or simulating execution.
         """
@@ -247,7 +247,7 @@ class TradingEngine:
             entry = signal.get("entry_price") or signal.get("entry")
             qty = signal.get("qty") or signal.get("quantity") or 0.0
             leverage = signal.get("leverage", 10)
-            virtual = signal.get("virtual", True)
+            virtual = signal.get("virtual", trading_mode == "virtual")
             take_profit = signal.get("tp")
             stop_loss = signal.get("sl")
             margin_usdt = signal.get("margin_usdt", 15.0)
@@ -261,7 +261,7 @@ class TradingEngine:
                 order_result = self.client.place_order(
                     symbol=symbol,
                     side=side,
-                    order_type="Market",  # Use Market order for simplicity
+                    order_type="Market",
                     qty=qty,
                     price=entry,
                     stop_loss=stop_loss,
@@ -282,7 +282,7 @@ class TradingEngine:
                     "leverage": leverage,
                     "margin_usdt": margin_usdt,
                     "strategy": signal.get("strategy", "Unknown"),
-                    "score": signal.get("score", 0),
+                    "score": signal.get("努score", 0),
                     "status": order_result.get("status", "open"),
                     "virtual": False,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -304,7 +304,7 @@ class TradingEngine:
                     "status": "open",
                     "virtual": True,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "order_id": str(uuid.uuid4())  # Generate unique order_id for virtual trades
+                    "order_id": str(uuid.uuid4())
                 }
 
             self.db.add_trade(trade_data)
@@ -314,7 +314,7 @@ class TradingEngine:
         except Exception as e:
             logger.error(f"❌ Error executing signal: {e}")
             return None
-
+        
     def load_capital(self, mode="all"):
         """Load capital from JSON file"""
         try:

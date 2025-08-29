@@ -272,11 +272,11 @@ class BybitClient:
         
         # Fallback for virtual mode
         mock_prices = {
-            "BTCUSDT": 60000.0,
-            "ETHUSDT": 2500.0,
-            "DOGEUSDT": 0.10,
-            "SOLUSDT": 150.0,
-            "XRPUSDT": 0.60
+            "BTCUSDT": 100000.0,
+            "ETHUSDT": 4500.0,
+            "DOGEUSDT": 0.20,
+            "SOLUSDT": 200.0,
+            "XRPUSDT": 1.60
         }
         price = mock_prices.get(symbol, 0.0)
         if price > 0:
@@ -335,7 +335,7 @@ class BybitClient:
                 "close_price": None,
                 "close_time": None,
                 "realized_pnl": None,
-                "leverage": leverage or 1
+                "leverage": leverage or 10
             }
 
             # Update virtual capital
@@ -369,7 +369,7 @@ class BybitClient:
                 "orderType": order_type,
                 "stopLoss": float(virtual_sl),
                 "takeProfit": float(virtual_tp),
-                "leverage": leverage or 1
+                "leverage": leverage or 10
             }
 
         # Real mode
@@ -407,7 +407,7 @@ class BybitClient:
                     "orderType": order_type,
                     "stopLoss": safe_float(stop_loss),
                     "takeProfit": safe_float(take_profit),
-                    "leverage": leverage or 1
+                    "leverage": leverage or 10
                 }
             else:
                 logger.error(f"Order placement error: {response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response'}")
@@ -438,7 +438,7 @@ class BybitClient:
                     "currentPrice": current_price,
                     "stopLoss": t.get("stopLoss"),
                     "takeProfit": t.get("takeProfit"),
-                    "leverage": t.get("leverage", 1)
+                    "leverage": t.get("leverage", 10)
                 }
                 positions.append(pos)
             return positions
@@ -520,7 +520,7 @@ class BybitClient:
                         "close_price": float(close_price),
                         "close_time": now_ms,
                         "realized_pnl": float(pnl),
-                        "leverage": t.get("leverage", 1)
+                        "leverage": t.get("leverage", 10)
                     }
                     trades.append(closed_trade)
 
@@ -753,7 +753,7 @@ class BybitClient:
                 {"symbol": "BTCUSDT", "lastPrice": "100000.0"},
                 {"symbol": "ETHUSDT", "lastPrice": "4500.0"},
                 {"symbol": "DOGEUSDT", "lastPrice": "0.20"},
-                {"symbol": "SOLUSDT", "lastPrice": "190.0"},
+                {"symbol": "SOLUSDT", "lastPrice": "200.0"},
                 {"symbol": "XRPUSDT", "lastPrice": "1.60"},
             ]
         try:

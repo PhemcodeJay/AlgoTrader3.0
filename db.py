@@ -16,13 +16,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-# Load .env file if it exists
 load_dotenv()
 
 Base = declarative_base()
 
-# === SQLAlchemy Models ===
 class Signal(Base):
     __tablename__ = 'signals'
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -37,7 +34,7 @@ class Signal(Base):
     tp: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     trail: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     liquidation: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    leverage: Mapped[Optional[int]] = mapped_column(Integer, default=20)
+    leverage: Mapped[Optional[int]] = mapped_column(Integer, default=10)
     margin_usdt: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     entry: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     market: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -139,7 +136,7 @@ class SystemSetting(Base):
     value: Mapped[str] = mapped_column(String)
 
 # === DB Setup ===
-DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///trading.db"  # Fallback to SQLite
+DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///trading.db"
 if not DATABASE_URL:
     logger.error("DATABASE_URL not set in .env and no fallback provided")
     raise RuntimeError("DATABASE_URL is not set and no fallback provided")
@@ -191,6 +188,14 @@ class DatabaseManager:
     def get_trades_by_status(self, status: str) -> List[Trade]:
         with self.get_session() as session:
             return session.query(Trade).filter(Trade.status == status).all()
+
+    def get_real_trades(self, symbol: Optional[str] = None, limit: int = 50) -> List[Trade]:
+        """Get real (non-virtual) trades."""
+        with self.get_session() as session:
+            query = session.query(Trade).filter(Trade.virtual == False).order_by(Trade.timestamp.desc())
+            if symbol:
+                query = query.filter(Trade.symbol == symbol)
+            return query.limit(limit).all()
 
     def close_trade(self, order_id: str, exit_price: float, pnl: float):
         with self.get_session() as session:
@@ -292,6 +297,5 @@ class DatabaseManager:
         with self.get_session() as session:
             return session.query(Signal).count()
 
-# Initialize database manager
 db_manager = DatabaseManager(DATABASE_URL)
 db = db_manager

@@ -14,15 +14,17 @@ from views.portfolio import show_portfolio
 from views.automation import show_automation
 from views.logs import show_logs
 
-# Utility functions (from portfolio.py or signals.py)
+# Utility functions
 def format_currency_safe(value: Optional[float]) -> str:
     """Format currency safely"""
     return f"${value:.2f}" if value is not None else "$0.00"
 
 def load_virtual_balance() -> Dict[str, float]:
-    """Load virtual balance (placeholder implementation)"""
+    """Load virtual balance from capital.json"""
     try:
-        return {"capital": 100.0, "available": 100.0}
+        from bybit_client import _load_json_file
+        capital_data = _load_json_file("capital.json", {"virtual": {"capital": 100.0, "available": 100.0}})
+        return capital_data.get("virtual", {"capital": 100.0, "available": 100.0})
     except Exception as e:
         logger.error(f"Error loading virtual balance: {e}")
         return {"capital": 100.0, "available": 100.0}
@@ -52,20 +54,15 @@ st.set_page_config(
 # Custom CSS for modern, colorful styling
 st.markdown("""
     <style>
-    /* Global styles */
     .stApp {
         background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
         color: #e0e0e0;
         font-family: 'Segoe UI', sans-serif;
     }
-
-    /* Sidebar styling */
     .css-1d391kg {
         background: #2c2c4e;
         border-right: 1px solid rgba(99, 102, 241, 0.2);
     }
-
-    /* Selectbox */
     .stSelectbox, .stNumberInput {
         background: #3b3b5e;
         border-radius: 8px;
@@ -74,8 +71,6 @@ st.markdown("""
     .stSelectbox > div > div, .stNumberInput > div > div {
         color: #ffffff;
     }
-
-    /* Buttons */
     .stButton > button {
         background: linear-gradient(45deg, #6366f1, #a855f7);
         color: white;
@@ -89,8 +84,6 @@ st.markdown("""
         background: linear-gradient(45deg, #8183ff, #c084fc);
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
-
-    /* Metrics */
     .stMetric {
         background: rgba(255,255,255,0.05);
         border-radius: 8px;
@@ -105,15 +98,11 @@ st.markdown("""
         color: #ffffff;
         font-weight: 400;
     }
-
-    /* Info and error messages */
     .stAlert {
         border-radius: 8px;
         background: rgba(255,255,255,0.1);
         color: #ffffff;
     }
-
-    /* Caption */
     .stCaption {
         color: #a0a0c0;
     }
@@ -125,13 +114,11 @@ st.markdown("""
 def init_components():
     """Initialize database and trading components with error handling"""
     try:
-        # Import modules
         from db import db_manager, init_db
         from engine import TradingEngine
         from bybit_client import BybitClient
         from automated_trader import AutomatedTrader
 
-        # Initialize database
         database_url = os.getenv("DATABASE_URL", "sqlite:///trading.db")
         init_db()
         db_manager_instance = db_manager
@@ -264,20 +251,19 @@ def main():
         # Main content routing
         try:
             if page == "Dashboard":
-                show_dashboard(db, engine, client)
+                show_dashboard(db, engine, client, st.session_state.trading_mode)
             elif page == "Positions":
-                show_positions(db, engine, client)
+                show_positions(db, engine, client, st.session_state.trading_mode)
             elif page == "Orders":
-                show_orders(db, engine, client)
+                show_orders(db, engine, client, st.session_state.trading_mode)
             elif page == "Signals":
-                show_signals(db, engine, client)
+                show_signals(db, engine, client, st.session_state.trading_mode)
             elif page == "Portfolio":
-                show_portfolio(db, engine, client)
+                show_portfolio(db, engine, client, st.session_state.trading_mode)
             elif page == "Automation":
-                show_automation(automated_trader, db, engine, client)
+                show_automation(automated_trader, db, engine, client, st.session_state.trading_mode)
             elif page == "Logs":
                 show_logs()
-            # Note: show_settings is removed as it was not provided in the context
         except Exception as e:
             logger.error(f"Error in page {page}: {e}")
             st.error(f"🚨 Error loading {page}: {str(e)}")
