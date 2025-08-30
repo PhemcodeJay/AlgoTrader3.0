@@ -14,6 +14,7 @@ from views.signals import show_signals
 from views.portfolio import show_portfolio
 from views.automation import show_automation
 from views.logs import show_logs
+from views.ml import show_ml
 
 # Configure logging (single configuration)
 logging.basicConfig(
@@ -286,6 +287,8 @@ def main():
                 show_portfolio(db, engine, client, st.session_state.trading_mode)
             elif page == "Automation":
                 show_automation(automated_trader, db, engine, client, st.session_state.trading_mode)
+            elif page == "ML":
+                show_ml(db, engine, client, st.session_state.trading_mode)
             elif page == "Logs":
                 show_logs()
         except Exception as e:
