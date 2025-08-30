@@ -11,67 +11,38 @@ import subprocess
 import json
 import os
 import sys
-from utils import format_price_safe
+from utils import format_price_safe, normalize_signal
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
-# Constants
-RISK_PCT = 0.01
-ACCOUNT_BALANCE = 100.0
-LEVERAGE = 10
-ENTRY_BUFFER_PCT = 0.002
+# Constants (loaded from settings.json or defaults from utils.py)
+try:
+    from settings import load_settings
+    settings = load_settings()
+    RISK_PCT = settings.get('RISK_PCT', 0.01)
+    ACCOUNT_BALANCE = settings.get('VIRTUAL_BALANCE', 100.0)
+    LEVERAGE = settings.get('LEVERAGE', 10)
+    ENTRY_BUFFER_PCT = settings.get('ENTRY_BUFFER_PCT', 0.002)
+    TP_PERCENT = settings.get('TP_PERCENT', 0.015)
+    SL_PERCENT = settings.get('SL_PERCENT', 0.015)
+except ImportError:
+    RISK_PCT = 0.01
+    ACCOUNT_BALANCE = 100.0
+    LEVERAGE = 10
+    ENTRY_BUFFER_PCT = 0.002
+    TP_PERCENT = 0.015
+    SL_PERCENT = 0.015
+
 MIN_VOLUME = 1000
 MIN_ATR_PCT = 0.001
 RSI_ZONE = (20, 80)
 INTERVALS = ['15', '60', '240']
 MAX_SYMBOLS = 50
-TP_PERCENT = 0.015
-SL_PERCENT = 0.015
-
-def normalize_signal(signal: Union[Dict, object]) -> Dict:
-    """Convert a Signal object or dictionary to a consistent dictionary format."""
-    try:
-        if isinstance(signal, dict):
-            return {
-                "symbol": signal.get("Symbol", "N/A"),  # Match signal_generator.py keys
-                "side": signal.get("Side", "N/A"),
-                "entry_price": signal.get("Entry", 0),
-                "tp": signal.get("TP", 0),
-                "sl": signal.get("SL", 0),
-                "score": signal.get("Score", 0),
-                "strategy": signal.get("Type", "N/A"),
-                "created_at": signal.get("Time", "N/A")
-            }
-        else:
-            # Assume Signal object with attributes
-            return {
-                "symbol": getattr(signal, "symbol", "N/A"),
-                "side": getattr(signal, "side", "N/A"),
-                "entry_price": getattr(signal, "entry_price", 0),
-                "tp": getattr(signal, "tp", 0),
-                "sl": getattr(signal, "sl", 0),
-                "score": getattr(signal, "score", 0),
-                "strategy": getattr(signal, "strategy", "N/A"),
-                "created_at": getattr(signal, "created_at", "N/A")
-            }
-    except Exception as e:
-        logger.error(f"Error normalizing signal: {e}")
-        return {
-            "symbol": "N/A",
-            "side": "N/A",
-            "entry_price": 0,
-            "tp": 0,
-            "sl": 0,
-            "score": 0,
-            "strategy": "N/A",
-            "created_at": "N/A"
-        }
 
 def generate_real_signals(symbols: List[str], interval: str = "60") -> List[Dict]:
     """Run signal_generator.py and read the generated signals and PDF."""
     try:
-        # Prepare command to run signal_generator.py
         cmd = [sys.executable, "signal_generator.py", "--symbols", ",".join(symbols), "--interval", interval]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         
@@ -80,14 +51,12 @@ def generate_real_signals(symbols: List[str], interval: str = "60") -> List[Dict
             st.error(f"🚨 Error running signal generator: {result.stderr}")
             return [], None
 
-        # Read signals from JSON
         signals = []
         json_file = "signals.json"
         if os.path.exists(json_file):
-            with open(json_file, "r") as f:
+            with open(json_file, "r", encoding="utf-8") as f:
                 signals = json.load(f)
         
-        # Find the latest PDF
         pdf_files = [f for f in os.listdir() if f.startswith("signals_") and f.endswith(".pdf")]
         pdf_filename = max(pdf_files, key=os.path.getmtime, default=None) if pdf_files else None
         
@@ -228,7 +197,7 @@ def show_signals(db, engine, client, trading_mode: str = "virtual"):
     with st.expander("Generate New Signals"):
         with st.container(border=True):
             st.markdown("### Generate Signals")
-            symbols = client.get_symbols()  # Use client for symbols to ensure consistency
+            symbols = client.get_symbols()
             symbols = [s["symbol"] for s in symbols if s["symbol"].endswith("USDT")]
             symbols = [s for s in symbols if s not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]]
             selected_symbols = st.multiselect("Select Symbols", symbols, default=symbols[:3], key="signal_symbols_select")
@@ -293,11 +262,3 @@ def show_signals(db, engine, client, trading_mode: str = "virtual"):
 
     if st.button("🔄 Refresh Signals", key="refresh_signals_button"):
         st.rerun()
-
-# Initialize components
-db = db_manager
-engine = TradingEngine()
-client = engine.client
-
-# Run the app
-show_signals(db, engine, client)

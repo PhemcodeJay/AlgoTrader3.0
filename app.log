@@ -284,3 +284,63 @@ FROM trades ORDER BY trades.timestamp DESC
 2025-08-30 22:11:12,696 - bybit_client - INFO - Connected to Bybit Mainnet
 2025-08-30 22:11:13,016 - bybit_client - INFO -  Connected to Bybit Mainnet
 2025-08-30 22:11:14,480 - views.signals - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 22:31:13,491 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-30 22:31:14,106 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:31:14,107 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:31:35,280 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:31:49,428 - views.dashboard - WARNING - Invalid ticker response structure on attempt 1
+2025-08-30 22:32:00,008 - views.dashboard - WARNING - Invalid ticker response structure on attempt 2
+2025-08-30 22:32:05,942 - views.dashboard - WARNING - Invalid ticker response structure on attempt 3
+2025-08-30 22:32:06,959 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 22:32:22,368 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:32:22,368 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:32:23,402 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:32:44,105 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:32:44,107 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:32:44,809 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:32:52,770 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:32:52,770 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:32:53,625 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:33:03,364 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:33:03,365 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:33:04,554 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:33:06,850 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 22:33:08,834 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:33:08,835 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:33:10,174 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:34:55,839 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-30 23:02:15,780 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-30 23:02:15,943 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:02:15,944 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:02:18,612 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:02:41,995 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:02:41,998 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:02:43,602 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:03:10,656 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:03:10,658 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:03:11,600 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:03:22,116 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:03:22,116 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:03:22,862 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:03:26,999 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:03:27,075 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:03:28,334 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:03:34,493 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 23:03:34,561 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:03:34,562 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:03:40,041 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:03:42,850 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-30 23:07:06,658 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:07:06,666 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:07:07,460 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:07:08,972 - views.dashboard - WARNING - Invalid ticker response structure on attempt 1
+2025-08-30 23:07:11,675 - views.dashboard - WARNING - Invalid ticker response structure on attempt 2
+2025-08-30 23:07:16,020 - views.dashboard - WARNING - Invalid ticker response structure on attempt 3
+2025-08-30 23:07:17,040 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 23:07:24,648 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
