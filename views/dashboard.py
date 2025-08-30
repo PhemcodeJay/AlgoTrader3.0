@@ -8,45 +8,57 @@ from engine import TradingEngine
 from db import db_manager
 import time
 import requests
+from utils import format_price_safe, format_currency_safe, display_trades_table, get_trades_safe
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
-# Constants from utils.py
-RISK_PCT = 0.01
-ACCOUNT_BALANCE = 100.0
-LEVERAGE = 20
+# Constants (loaded from settings.json or defaults from utils.py)
+try:
+    from settings import load_settings
+    settings = load_settings()
+    RISK_PCT = settings.get('RISK_PCT', 0.01)
+    ACCOUNT_BALANCE = settings.get('VIRTUAL_BALANCE', 100.0)
+    LEVERAGE = settings.get('LEVERAGE', 10)
+except ImportError:
+    RISK_PCT = 0.01
+    ACCOUNT_BALANCE = 100.0
+    LEVERAGE = 10
 
 def get_ticker_snapshot_safe(client: BybitClient, max_retries: int = 3) -> List[dict]:
     """Safe wrapper for getting ticker snapshot with retry logic"""
     base_url = f"https://api{'-testnet' if client.testnet else ''}.bybit.com"
     url = f"{base_url}/v5/market/tickers?category=linear"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+    }
     for attempt in range(max_retries):
         try:
-            if client.is_connected():
+            if client and hasattr(client, 'get_tickers') and client.is_connected():
                 response = client.get_tickers(category="linear")
             else:
-                response = requests.get(url).json()
-            if isinstance(response, dict) and response.get("retCode") == 0:
+                response = requests.get(url, headers=headers).json()
+            logger.debug(f"Ticker API response: {response}")
+            if isinstance(response, dict) and response.get("ret_code") == 0:
                 tickers = [
                     {
                         "symbol": ticker.get("symbol", "N/A"),
                         "lastPrice": float(ticker.get("lastPrice", 0)),
-                        "priceChangePercent": float(ticker.get("priceChangePercent", 0))
+                        "priceChangePercent": float(ticker.get("price24hPcnt", '0')) * 100
                     }
                     for ticker in response.get("result", {}).get("list", [])
                     if ticker.get("symbol", "").endswith("USDT") and 
                        ticker.get("symbol", "") not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]
                 ]
                 return sorted(tickers, key=lambda x: x.get("lastPrice", 0), reverse=True)[:6]
-            logger.warning(f"Invalid ticker response structure on attempt {attempt + 1}")
-            time.sleep(1)
+            logger.warning(f"Invalid ticker response structure on attempt {attempt + 1}: {response.get('ret_msg', 'No error message')}")
+            time.sleep(2)
         except AttributeError as e:
             logger.error(f"BybitClient method error on attempt {attempt + 1}: {e}")
-            time.sleep(1)
+            time.sleep(2)
         except Exception as e:
             logger.error(f"Error getting ticker snapshot on attempt {attempt + 1}: {e}")
-            time.sleep(1)
+            time.sleep(2)
     logger.warning("All retries failed, returning default ticker data")
     default_tickers = [
         {"symbol": "BTCUSDT", "lastPrice": 100000.0, "priceChangePercent": 0.0},
@@ -116,111 +128,6 @@ def get_current_price_safe(symbol: str, client: BybitClient) -> float:
     except Exception as e:
         logger.error(f"Error getting price for {symbol}: {e}")
         return 0.0
-
-def format_price_safe(value: Optional[float]) -> str:
-    """Format price safely"""
-    return f"{value:.2f}" if value is not None and value > 0 else "N/A"
-
-def format_currency_safe(value: Optional[float]) -> str:
-    """Format currency safely"""
-    return f"{value:.2f}" if value is not None else "0.00"
-
-def get_trades_safe(db, limit: int = 50) -> List:
-    """Safe wrapper for getting trades"""
-    try:
-        trades = db.get_trades(limit=limit) or []
-        return [t for t in trades if getattr(t, 'symbol', 'N/A') not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]]
-    except Exception as e:
-        logger.error(f"Error getting trades: {e}")
-        return []
-
-def get_open_trades_safe(db) -> List:
-    """Safe wrapper for getting open trades"""
-    try:
-        trades = db.get_open_trades() or []
-        return [t for t in trades if getattr(t, 'symbol', 'N/A') not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]]
-    except Exception as e:
-        logger.error(f"Error getting open trades: {e}")
-        return []
-
-def get_signals_safe(db) -> List:
-    """Safe wrapper for getting signals"""
-    try:
-        return db.get_signals(limit=50)
-    except Exception as e:
-        logger.error(f"Error getting signals: {e}")
-        return []
-
-def display_trades_table(trades: List, container, max_trades=5):
-    """Reusable function to display trades table"""
-    try:
-        if not trades:
-            container.info("🌙 No trades to display")
-            return
-
-        trades_data = []
-        for trade in trades[:max_trades]:
-            current_price = get_current_price_safe(getattr(trade, 'symbol', 'N/A'), client)
-            qty = float(getattr(trade, 'qty', 0))
-            entry_price = float(getattr(trade, 'entry_price', 0))
-            unreal_pnl = (current_price - entry_price) * qty if getattr(trade, 'side', 'Buy') == "Buy" else (entry_price - current_price) * qty
-            trades_data.append({
-                "Symbol": getattr(trade, 'symbol', 'N/A'),
-                "Side": getattr(trade, 'side', 'N/A'),
-                "Entry": f"${format_price_safe(entry_price)}",
-                "P&L": f"${format_currency_safe(unreal_pnl if getattr(trade, 'status', '').lower() == 'open' else getattr(trade, 'pnl', 0))}",
-                "Status": getattr(trade, 'status', 'N/A').title(),
-                "Mode": "Virtual" if getattr(trade, 'virtual', True) else "Real"
-            })
-
-        if trades_data:
-            df = pd.DataFrame(trades_data)
-            container.dataframe(df, use_container_width=True, height=300)
-        else:
-            container.info("🌙 No trade data to display")
-    except Exception as e:
-        logger.error(f"Error displaying trades table: {e}")
-        container.error("🚨 Error displaying trades")
-
-def display_signals(signals: List, container, title: str, page: int = 1, page_size: int = 5):
-    """Reusable function to display signals"""
-    try:
-        if not signals:
-            container.info("🌙 No signals to display")
-            return
-
-        signals_data = []
-        for signal in signals:
-            signals_data.append({
-                "Symbol": signal.get("symbol", "N/A"),
-                "Side": signal.get("side", "N/A"),
-                "Entry": f"${format_price_safe(signal.get('entry_price', 0))}",
-                "TP": f"${format_price_safe(signal.get('tp', 0))}",
-                "SL": f"${format_price_safe(signal.get('sl', 0))}",
-                "Score": f"{signal.get('score', 0):.1f}%",
-                "Strategy": signal.get("strategy", "N/A"),
-                "Time": signal.get("created_at", "N/A")
-            })
-
-        if signals_data:
-            start_idx = (page - 1) * page_size
-            end_idx = start_idx + page_size
-            df = pd.DataFrame(signals_data[start_idx:end_idx])
-            container.dataframe(df, use_container_width=True, height=300)
-            col1, col2, col3 = container.columns([1, 3, 1])
-            if col1.button("◀️ Previous", key=f"{title}_prev"):
-                if page > 1:
-                    st.session_state[f"{title.lower().replace(' ', '_')}_page"] = page - 1
-                    st.rerun()
-            if col3.button("Next ▶️", key=f"{title}_next"):
-                if end_idx < len(signals_data):
-                    st.session_state[f"{title.lower().replace(' ', '_')}_page"] = page + 1
-                    st.rerun()
-        else:
-            container.info("🌙 No signal data to display")
-    except Exception as e:
-        logger.error(f"Error displaying signals: {e}")
-        container.error("🚨 Error displaying signals")
 
 def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
     """Dashboard page with tabs and card-based layout"""
