@@ -344,3 +344,12 @@ For more information refer to the [docs](https://docs.streamlit.io/develop/api-r
 2025-08-30 23:07:24,648 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
 
 For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-30 23:07:42,442 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 23:07:42,443 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:07:42,820 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:07:42,823 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 23:07:43,193 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 23:07:45,180 - views.dashboard - WARNING - Invalid ticker response structure on attempt 1
+2025-08-30 23:07:48,467 - views.dashboard - WARNING - Invalid ticker response structure on attempt 2
+2025-08-30 23:07:54,960 - views.dashboard - WARNING - Invalid ticker response structure on attempt 3
+2025-08-30 23:07:55,961 - views.dashboard - WARNING - All retries failed, returning default ticker data
