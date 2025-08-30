@@ -926,3 +926,16 @@ UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d' in posit
 2025-08-31 02:25:01,644 - engine - INFO - [Engine] Initializing TradingEngine...
 2025-08-31 02:25:01,648 - bybit_client - INFO - Connected to Bybit Mainnet
 2025-08-31 02:25:02,217 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 02:25:03,200 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 02:40:25,521 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 02:40:25,567 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 02:40:27,255 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 02:40:27,297 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 02:40:28,097 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 02:40:30,461 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 02:40:33,743 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 02:40:36,910 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 02:40:38,919 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 02:41:29,584 - views.orders - INFO - Virtual open trades: [<db.Trade object at 0x000002014D62FE30>, <db.Trade object at 0x000002014D62FF20>, <db.Trade object at 0x000002014D62C6E0>, <db.Trade object at 0x000002014D62C7D0>, <db.Trade object at 0x000002014D62C8C0>, <db.Trade object at 0x000002014D62D5E0>, <db.Trade object at 0x000002014D62CB90>, <db.Trade object at 0x000002014D62F3E0>, <db.Trade object at 0x000002014D62C9B0>, <db.Trade object at 0x000002014D62F020>, <db.Trade object at 0x000002014D62F890>, <db.Trade object at 0x000002014D62E6C0>, <db.Trade object at 0x000002014D62CAA0>, <db.Trade object at 0x000002014D62D8B0>]
