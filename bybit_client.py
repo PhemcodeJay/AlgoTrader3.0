@@ -1,28 +1,44 @@
 import os
 import time
 import logging
+import math
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Optional, List, Any, TYPE_CHECKING
 import json
 import uuid
 import portalocker
+from tenacity import retry, stop_after_attempt, wait_exponential
 
-
-# Configure logging
+# Configure logging with UTF-8 encoding
+logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
+        logging.FileHandler('app.log', encoding='utf-8'),  # Explicit UTF-8 for file
+        logging.StreamHandler()  # Console handler
     ]
 )
-logger = logging.getLogger(__name__)
+
+# Custom StreamHandler to ensure UTF-8 console output
+class UTF8StreamHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            stream = self.stream
+            stream.write(msg.encode('utf-8', errors='replace').decode('utf-8') + self.terminator)
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
+# Replace default StreamHandler with UTF8StreamHandler
+for handler in logger.handlers:
+    if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+        logger.removeHandler(handler)
+logger.addHandler(UTF8StreamHandler())
 
 PYBIT_AVAILABLE: bool = False
-
-# Default
-leverage=10
+leverage = 10
 
 if TYPE_CHECKING:
     from pybit.unified_trading import HTTP
@@ -41,16 +57,13 @@ from db import db_manager
 VIRTUAL_TRADES_FILE = "virtual_trades.json"
 CAPITAL_FILE = "capital.json"
 
-logger = logging.getLogger(__name__)
-
 def _load_json_file(path: str, default):
     try:
         with open(path, "r") as f:
-            portalocker.lock(f, portalocker.LOCK_SH)  # Shared lock for reading
+            portalocker.lock(f, portalocker.LOCK_SH)
             data = json.load(f)
             portalocker.unlock(f)
             return data
-
     except (FileNotFoundError, PermissionError, json.JSONDecodeError) as e:
         logger.warning(f"Could not read {path}: {e}")
         return default
@@ -61,16 +74,14 @@ def _load_json_file(path: str, default):
 def _save_json_file(path: str, data):
     try:
         with open(path, "w") as f:
-            portalocker.lock(f, portalocker.LOCK_EX)  # Exclusive lock for writing
+            portalocker.lock(f, portalocker.LOCK_EX)
             json.dump(data, f, indent=4)
             f.flush()
             portalocker.unlock(f)
-
     except (PermissionError, OSError) as e:
         logger.error(f"Could not write {path}: {e}")
     except Exception as e:
         logger.error(f"Unexpected error writing {path}: {e}")
-
 
 def safe_float(value, default=0.0):
     try:
@@ -80,6 +91,10 @@ def safe_float(value, default=0.0):
     except (ValueError, TypeError):
         return default
 
+def sanitize_message(message: str) -> str:
+    """Replace problematic Unicode characters in error messages."""
+    return message.encode('ascii', errors='replace').decode('ascii')
+
 class BybitClient:
     """Bybit client with real mode (pybit) and enhanced virtual mode with trade tracking + PnL simulation."""
     def __init__(self):
@@ -88,7 +103,7 @@ class BybitClient:
         self.session = self._connect()
         key_env = "BYBIT_TESTNET_API_KEY" if self.testnet else "BYBIT_API_KEY"
         secret_env = "BYBIT_TESTNET_API_SECRET" if self.testnet else "BYBIT_API_SECRET"
-        logger.info(f"Connected to Bybit Mainnet")
+        logger.info(f"Connected to Bybit {'Testnet' if self.testnet else 'Mainnet'}")
         self.api_key = (os.getenv(key_env) or "").strip()
         self.api_secret = (os.getenv(secret_env) or "").strip()
         self.client: Optional[HTTPClient] = None
@@ -103,14 +118,14 @@ class BybitClient:
                 )
                 response = self.client.get_server_time()
                 if isinstance(response, dict) and response.get("retCode") == 0:
-                    logger.info(f" Connected to Bybit Mainnet")
+                    logger.info(f"Connected to Bybit {'Testnet' if self.testnet else 'Mainnet'}")
                     self.use_real = True
                 else:
                     msg = response.get("retMsg") if isinstance(response, dict) else "Invalid response"
-                    logger.error(f"❌ Failed to authenticate: {msg}")
+                    logger.error(f"❌ Failed to authenticate: {sanitize_message(msg)}")
                     self.client = None
             except Exception as e:
-                logger.error(f"❌ Failed to initialize Bybit client: {e}")
+                logger.error(f"❌ Failed to initialize Bybit client: {sanitize_message(str(e))}")
                 self.client = None
         else:
             logger.warning("⚠️ No API credentials or pybit not available, running in virtual mode")
@@ -140,7 +155,7 @@ class BybitClient:
         _save_json_file(CAPITAL_FILE, data)
 
     def _connect(self):
-        return True  # Placeholder for connection logic
+        return True
 
     def is_connected(self) -> bool:
         return self.client is not None
@@ -153,23 +168,20 @@ class BybitClient:
             if isinstance(response, dict) and response.get("retCode") == 0:
                 return response.get("result", {})
             else:
-                logger.error(f"Account info error: {response.get('retMsg') if isinstance(response, dict) else 'Invalid response'}")
-                return {"error": response.get("retMsg") if isinstance(response, dict) else "Invalid response"}
+                logger.error(f"Account info error: {sanitize_message(response.get('retMsg') if isinstance(response, dict) else 'Invalid response')}")
+                return {"error": sanitize_message(response.get("retMsg") if isinstance(response, dict) else "Invalid response")}
         except Exception as e:
-            logger.error(f"Error getting account info: {e}")
-            return {"error": str(e)}
+            logger.error(f"Error getting account info: {sanitize_message(str(e))}")
+            return {"error": sanitize_message(str(e))}
 
     def get_wallet_balance(self) -> Dict[str, Any]:
         if not self.client:
             return self._get_virtual_balance()
-        
         try:
             response = self.client.get_wallet_balance(accountType=self.account_type)
-
             if isinstance(response, dict) and response.get("retCode") == 0:
                 result = response.get("result", {})
                 account_list = result.get("list", [])
-
                 if not account_list:
                     logger.warning("No account data returned from Bybit API")
                     return {
@@ -184,11 +196,9 @@ class BybitClient:
                         },
                         "error": "No account data"
                     }
-
                 account = account_list[0]
                 coins = account.get("coin", [])
                 usdt_balance = next((c for c in coins if c.get("coin") == "USDT"), {})
-
                 return {
                     "totalEquity": safe_float(account.get("totalEquity")),
                     "totalWalletBalance": safe_float(account.get("totalWalletBalance")),
@@ -202,13 +212,11 @@ class BybitClient:
                 }
             else:
                 msg = response.get("retMsg", "Unknown error") if isinstance(response, dict) else "Invalid response"
-                logger.error(f"Wallet balance API error: {msg}")
+                logger.error(f"Wallet balance API error: {sanitize_message(msg)}")
                 return self._get_virtual_balance()
-
         except Exception as e:
-            logger.error(f"Exception getting wallet balance: {str(e)}")
+            logger.error(f"Exception getting wallet balance: {sanitize_message(str(e))}")
             return self._get_virtual_balance()
-
 
     def _get_virtual_balance(self) -> Dict[str, Any]:
         try:
@@ -245,10 +253,10 @@ class BybitClient:
             if isinstance(response, dict) and response.get("retCode") == 0:
                 return response.get("result", {}).get("list", [])[:100]
             else:
-                logger.error(f"Symbols error: {response.get('retMsg') if isinstance(response, dict) else 'Invalid response'}")
+                logger.error(f"Symbols error: {sanitize_message(response.get('retMsg') if isinstance(response, dict) else 'Invalid response')}")
                 return []
         except Exception as e:
-            logger.error(f"Error getting symbols: {e}")
+            logger.error(f"Error getting symbols: {sanitize_message(str(e))}")
             return []
 
     def get_current_price(self, symbol: str) -> float:
@@ -264,9 +272,7 @@ class BybitClient:
                             return price
                 logger.warning(f"Failed to get price from Bybit API for {symbol}")
             except Exception as e:
-                logger.warning(f"Authenticated API failed for {symbol}: {e}")
-        
-        # Fallback for virtual mode
+                logger.warning(f"Authenticated API failed for {symbol}: {sanitize_message(str(e))}")
         mock_prices = {
             "BTCUSDT": 100000.0,
             "ETHUSDT": 4500.0,
@@ -281,6 +287,78 @@ class BybitClient:
         logger.error(f"No price available for {symbol}")
         return 0.0
 
+    def _validate_order_params(self, symbol: str, qty: float, price: float = 0.0, stop_loss: Optional[float] = None, take_profit: Optional[float] = None) -> Dict[str, Any]:
+        """Validate order parameters against Bybit's symbol specifications."""
+        if qty <= 0 or (price <= 0 and price != 0.0) or (stop_loss is not None and stop_loss <= 0) or (take_profit is not None and take_profit <= 0):
+            logger.error(f"Invalid order parameters: qty={qty}, price={price}, stop_loss={stop_loss}, take_profit={take_profit}")
+            return {"valid": False, "error": "Invalid parameters", "adjusted_qty": qty}
+
+        if not self.client:
+            # For virtual mode, assume integer quantities for DOGEUSDT
+            adjusted_qty = math.floor(qty) if symbol == "DOGEUSDT" else qty
+            if adjusted_qty <= 0:
+                logger.error(f"Invalid qty for {symbol}: {qty} (adjusted to {adjusted_qty})")
+                return {"valid": False, "error": f"Invalid qty for {symbol}", "adjusted_qty": adjusted_qty}
+            return {"valid": True, "adjusted_qty": adjusted_qty, "adjusted_price": price, "adjusted_sl": stop_loss, "adjusted_tp": take_profit}
+
+        try:
+            response = self.client.get_instruments_info(category="linear", symbol=symbol)
+            if isinstance(response, dict) and response.get("retCode") == 0:
+                symbol_info = response.get("result", {}).get("list", [{}])[0]
+                lot_filter = symbol_info.get("lotSizeFilter", {})
+                price_filter = symbol_info.get("priceFilter", {})
+
+                min_qty = safe_float(lot_filter.get("minOrderQty", 0))
+                max_qty = safe_float(lot_filter.get("maxOrderQty", float("inf")))
+                qty_step = safe_float(lot_filter.get("qtyStep", 1))
+                tick_size = safe_float(price_filter.get("tickSize", 0.0001))
+
+                # Validate and adjust qty
+                if qty < min_qty or qty > max_qty:
+                    logger.error(f"Qty {qty} out of range for {symbol}: min={min_qty}, max={max_qty}")
+                    return {"valid": False, "error": f"Qty out of range: min={min_qty}, max={max_qty}", "adjusted_qty": qty}
+                adjusted_qty = math.floor(qty / qty_step) * qty_step
+                if adjusted_qty != qty:
+                    logger.warning(f"Adjusted qty for {symbol} from {qty} to {adjusted_qty} to match qtyStep={qty_step}")
+
+                # Validate price (for Limit orders)
+                if price > 0:
+                    adjusted_price = round(price / tick_size) * tick_size
+                    if adjusted_price != price:
+                        logger.warning(f"Adjusted price for {symbol} from {price} to {adjusted_price} to match tickSize={tick_size}")
+                        price = adjusted_price
+                    if price <= 0:
+                        logger.error(f"Invalid price for {symbol}: {price}")
+                        return {"valid": False, "error": f"Invalid price: {price}", "adjusted_qty": adjusted_qty}
+
+                # Validate stop_loss and take_profit
+                if stop_loss is not None:
+                    adjusted_sl = round(stop_loss / tick_size) * tick_size
+                    if adjusted_sl != stop_loss:
+                        logger.warning(f"Adjusted stop_loss for {symbol} from {stop_loss} to {adjusted_sl}")
+                        stop_loss = adjusted_sl
+                    if stop_loss <= 0:
+                        logger.error(f"Invalid stop_loss for {symbol}: {stop_loss}")
+                        return {"valid": False, "error": f"Invalid stop_loss: {stop_loss}", "adjusted_qty": adjusted_qty}
+
+                if take_profit is not None:
+                    adjusted_tp = round(take_profit / tick_size) * tick_size
+                    if adjusted_tp != take_profit:
+                        logger.warning(f"Adjusted take_profit for {symbol} from {take_profit} to {adjusted_tp}")
+                        take_profit = adjusted_tp
+                    if take_profit <= 0:
+                        logger.error(f"Invalid take_profit for {symbol}: {take_profit}")
+                        return {"valid": False, "error": f"Invalid take_profit: {take_profit}", "adjusted_qty": adjusted_qty}
+
+                return {"valid": True, "adjusted_qty": adjusted_qty, "adjusted_price": price, "adjusted_sl": stop_loss, "adjusted_tp": take_profit}
+            else:
+                logger.error(f"Failed to get symbol info for {symbol}: {sanitize_message(response.get('retMsg') if isinstance(response, dict) else 'Invalid response')}")
+                return {"valid": False, "error": "Failed to get symbol info", "adjusted_qty": qty}
+        except Exception as e:
+            logger.error(f"Error validating order params for {symbol}: {sanitize_message(str(e))}")
+            return {"valid": False, "error": f"Validation error: {str(e)}", "adjusted_qty": qty}
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
     def place_order(self, symbol: str, side: str, order_type: str, qty: float,
                     price: float = 0.0, time_in_force: str = "GTC",
                     stop_loss: Optional[float] = None, take_profit: Optional[float] = None,
@@ -291,28 +369,33 @@ class BybitClient:
             logger.error(f"Invalid side: {side}")
             return None
 
-        # Validate inputs
-        if qty <= 0 or (order_type == "Limit" and price <= 0):
-            logger.error(f"Invalid order parameters: qty={qty}, price={price}")
-            return None
+        # Validate order parameters
+        validation = self._validate_order_params(symbol, qty, price, stop_loss, take_profit)
+        if not validation["valid"]:
+            logger.error(f"Order validation failed for {symbol}: {validation['error']}")
+            return {"status": "error", "message": validation["error"], "params": {"symbol": symbol, "side": side, "qty": qty}}
+        qty = validation["adjusted_qty"]
+        price = validation.get("adjusted_price", price)
+        stop_loss = validation.get("adjusted_sl", stop_loss)
+        take_profit = validation.get("adjusted_tp", take_profit)
 
         # Virtual mode
         if not self.client:
             # Validate balance
             capital_data = self._read_capital()
             virtual_cap = capital_data.get("virtual", {"capital": 100.0, "available": 100.0, "used": 0.0})
-            margin_required = (qty * (price or self.get_current_price(symbol))) / (leverage or 1)
+            current_price = price or self.get_current_price(symbol)
+            margin_required = (qty * current_price) / (leverage or 1)
             if margin_required > virtual_cap["available"]:
                 logger.error(f"Insufficient virtual balance: {margin_required} required, {virtual_cap['available']} available")
-                return None
+                return {"status": "error", "message": "Insufficient virtual balance", "params": {"symbol": symbol, "side": side, "qty": qty}}
 
-            virtual_price = price or self.get_current_price(symbol)
-            if virtual_price <= 0:
-                logger.error(f"Invalid price for {symbol}: {virtual_price}")
-                return None
+            if current_price <= 0:
+                logger.error(f"Invalid price for {symbol}: {current_price}")
+                return {"status": "error", "message": f"Invalid price: {current_price}", "params": {"symbol": symbol, "side": side, "qty": qty}}
 
-            virtual_tp = take_profit if take_profit and take_profit > 0 else (virtual_price * 1.30 if side == "Buy" else virtual_price * 0.70)
-            virtual_sl = stop_loss if stop_loss and stop_loss > 0 else (virtual_price * 0.90 if side == "Buy" else virtual_price * 1.10)
+            virtual_tp = take_profit if take_profit and take_profit > 0 else (current_price * 1.30 if side == "Buy" else current_price * 0.70)
+            virtual_sl = stop_loss if stop_loss and stop_loss > 0 else (current_price * 0.90 if side == "Buy" else current_price * 1.10)
 
             trade_id = f"virtual_{uuid.uuid4().hex}"
             now_ms = int(time.time() * 1000)
@@ -322,7 +405,7 @@ class BybitClient:
                 "symbol": symbol,
                 "side": side,
                 "size": float(qty),
-                "entryPrice": float(virtual_price),
+                "entryPrice": float(current_price),
                 "entryTime": now_ms,
                 "status": "Open",
                 "order_type": order_type,
@@ -351,14 +434,14 @@ class BybitClient:
             except Exception as e:
                 logger.debug(f"Could not save virtual trade to DB: {e}")
 
-            logger.info(f"[VIRTUAL] Opened {side} {symbol} qty={qty} at {virtual_price} (id={trade_id})")
+            logger.info(f"[VIRTUAL] Opened {side} {symbol} qty={qty} at {current_price} (id={trade_id})")
             self.update_unrealized_positions()
 
             return {
                 "symbol": symbol,
                 "side": side,
                 "qty": float(qty),
-                "price": float(virtual_price),
+                "price": float(current_price),
                 "order_id": trade_id,
                 "create_time": now_ms,
                 "status": "Filled",
@@ -385,7 +468,17 @@ class BybitClient:
             if take_profit and take_profit > 0:
                 params["takeProfit"] = str(float(take_profit))
             if leverage and leverage > 0:
-                params["leverage"] = str(int(leverage))
+                try:
+                    self.client.set_leverage(
+                        category="linear",
+                        symbol=symbol,
+                        buyLeverage=str(int(leverage)),
+                        sellLeverage=str(int(leverage))
+                    )
+                    params["leverage"] = str(int(leverage))
+                except Exception as e:
+                    logger.error(f"Failed to set leverage for {symbol}: {sanitize_message(str(e))}")
+                    return {"status": "error", "message": f"Failed to set leverage: {str(e)}", "params": params}
 
             response = self.client.place_order(**params)
             if isinstance(response, dict) and response.get("retCode") == 0:
@@ -406,11 +499,12 @@ class BybitClient:
                     "leverage": leverage or 10
                 }
             else:
-                logger.error(f"Order placement error: {response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response'}")
-                return None
+                msg = response.get("retMsg", "Unknown error") if isinstance(response, dict) else "Invalid response"
+                logger.error(f"Order placement error: {sanitize_message(msg)}")
+                return {"status": "error", "message": sanitize_message(msg), "params": params}
         except Exception as e:
-            logger.error(f"Error placing order: {e}")
-            return None
+            logger.error(f"Error placing order: {sanitize_message(str(e))}")
+            return {"status": "error", "message": sanitize_message(str(e)), "params": params}
 
     def get_positions(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
         self.monitor_sl_tp()
@@ -446,20 +540,18 @@ class BybitClient:
             if isinstance(response, dict) and response.get("retCode") == 0:
                 return response.get("result", {}).get("list", [])
             else:
-                logger.error(f"Positions error: {response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response'}")
+                logger.error(f"Positions error: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}")
                 return []
         except Exception as e:
-            logger.error(f"Error getting positions: {e}")
+            logger.error(f"Error getting positions: {sanitize_message(str(e))}")
             return []
 
     def close_position(self, symbol: str, side: str, qty: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        # Normalize side
         side = "Buy" if side.upper() == "LONG" else "Sell" if side.upper() == "SHORT" else side
         if side not in ["Buy", "Sell"]:
             logger.error(f"Invalid side for closing position: {side}")
             return None
 
-        # Virtual mode
         if not self.client:
             trades = self._read_virtual_trades()
             matching = [t for t in trades if t.get("symbol") == symbol and t.get("status") == "Open" and t.get("side") == side]
@@ -559,7 +651,6 @@ class BybitClient:
                 "close_time": now_ms
             }
 
-        # Real mode
         try:
             positions = self.get_positions(symbol)
             position = next((p for p in positions if p.get("symbol") == symbol and p.get("side") == side), None)
@@ -580,7 +671,7 @@ class BybitClient:
                 time_in_force="IOC"
             )
         except Exception as e:
-            logger.error(f"Error closing position: {e}")
+            logger.error(f"Error closing position: {sanitize_message(str(e))}")
             return None
 
     def _compute_unrealized_for_trade(self, trade: Dict[str, Any], current_price: float) -> float:
@@ -695,10 +786,10 @@ class BybitClient:
                 total_pnl = sum(safe_float(pnl.get("closedPnl", 0)) for pnl in pnl_list)
                 return total_pnl
             else:
-                logger.error(f"Daily P&L error: {response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response'}")
+                logger.error(f"Daily P&L error: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}")
                 return 0.0
         except Exception as e:
-            logger.error(f"Error getting daily P&L: {e}")
+            logger.error(f"Error getting daily P&L: {sanitize_message(str(e))}")
             return 0.0
 
     def get_portfolio_unrealized(self) -> Dict[str, Any]:
@@ -734,7 +825,7 @@ class BybitClient:
                 total += unreal
             return {"total_unrealized": total, "by_symbol": by_symbol}
         except Exception as e:
-            logger.debug(f"Could not compute real unrealized: {e}")
+            logger.debug(f"Could not compute real unrealized: {sanitize_message(str(e))}")
             return {"total_unrealized": 0.0, "by_symbol": {}}
 
     def dump_virtual_state(self) -> Dict[str, Any]:
@@ -747,7 +838,7 @@ class BybitClient:
         if not self.client:
             return [
                 {"symbol": "BTCUSDT", "lastPrice": "100000.0"},
-                {"symbol": "ETHUSDT", "lastPrice": "4500.0"},
+                {"symbol": "ETHUSDT", "lastPrice": "4000.0"},
                 {"symbol": "DOGEUSDT", "lastPrice": "0.20"},
                 {"symbol": "SOLUSDT", "lastPrice": "200.0"},
                 {"symbol": "XRPUSDT", "lastPrice": "1.60"},
@@ -756,8 +847,8 @@ class BybitClient:
             response = self.client.get_tickers(category=category)
             if isinstance(response, dict) and response.get("retCode") == 0:
                 return response.get("result", {}).get("list", [])
-            logger.error(f"Error getting tickers: {response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response'}")
+            logger.error(f"Error getting tickers: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}")
             return []
         except Exception as e:
-            logger.error(f"Error getting tickers: {e}")
+            logger.error(f"Error getting tickers: {sanitize_message(str(e))}")
             return []

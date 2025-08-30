@@ -165,7 +165,7 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
                                 st.metric("Entry Price", f"${format_price_safe(entry_price)}")
                             with col2:
                                 st.metric("Current Price", f"${format_price_safe(current_price)}")
-                                st.metric("Unrealized P&L", f"${format_currency_safe(unreal_pnl)}", 
+                                st.metric("Unrealized P&L", f"{format_currency_safe(unreal_pnl)}", 
                                          delta=f"{unreal_pnl:+.2f}", 
                                          delta_color="normal" if unreal_pnl >= 0 else "inverse")
                             with col3:

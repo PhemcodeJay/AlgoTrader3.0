@@ -185,6 +185,12 @@ def show_signals(db, engine, client, trading_mode: str = "virtual"):
             padding: 10px;
             margin: 5px 0;
         }
+        .stMetric > div {
+            font-size: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .stSelectbox, .stNumberInput, .stMultiSelect {
             background: #3b3b5e;
             border-radius: 8px;
