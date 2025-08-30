@@ -1,6 +1,6 @@
 import streamlit as st
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta 
 from typing import List, Optional, Dict, Union
 from bybit_client import BybitClient
 from engine import TradingEngine
@@ -8,7 +8,9 @@ from db import db_manager
 import pandas as pd
 import numpy as np
 import requests
-from signal_generator import analyze, get_usdt_symbols, get_candles, classify_trend, ema, sma, rsi, bollinger, atr, macd
+import os
+from signal_generator import get_usdt_symbols, SignalPDF
+from utils import get_candles, ema, sma, rsi, bollinger, atr, macd, classify_trend, format_price_safe, calculate_indicators
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
@@ -23,137 +25,135 @@ MIN_ATR_PCT = 0.001
 RSI_ZONE = (20, 80)
 INTERVALS = ['15', '60', '240']
 MAX_SYMBOLS = 50
-TP_PERCENT = 0.15
-SL_PERCENT = 0.05
+TP_PERCENT = 0.015  # Aligned with signal_generator.py
+SL_PERCENT = 0.015  # Aligned with signal_generator.py
 
-def calculate_indicators(data: pd.DataFrame) -> pd.DataFrame:
-    """Calculate technical indicators for signal generation"""
-    if data.empty or 'close' not in data.columns:
-        logger.warning("Empty or invalid DataFrame for indicators")
-        return data
-
-    df = data.sort_values("timestamp").reset_index(drop=True)
-    df['close'] = pd.to_numeric(df['close'], errors='coerce')
-    df['high'] = pd.to_numeric(df['high'], errors='coerce')
-    df['low'] = pd.to_numeric(df['low'], errors='coerce')
-    df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
-
-    # RSI
-    delta = df['close'].diff().astype(float)
-    gain = delta.where(delta > 0, 0.0)
-    loss = -delta.where(delta < 0, 0.0)
-    avg_gain = gain.rolling(14).mean()
-    avg_loss = loss.rolling(14).mean()
-    rs = avg_gain / (avg_loss + 1e-14)
-    df['RSI'] = 100 - (100 / (1 + rs))
-    df['RSI'] = df['RSI'].fillna(50)
-
-    # EMAs and SMA
-    df['EMA_9'] = df['close'].ewm(span=9, adjust=False).mean()
-    df['EMA_21'] = df['close'].ewm(span=21, adjust=False).mean()
-    df['SMA_20'] = df['close'].rolling(window=20).mean()
-
-    # MACD
-    ema_12 = df['close'].ewm(span=12, adjust=False).mean()
-    ema_26 = df['close'].ewm(span=26, adjust=False).mean()
-    df['MACD'] = ema_12 - ema_26
-    df['MACD_signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
-    df['MACD_hist'] = df['MACD'] - df['MACD_signal']
-
-    # Bollinger Bands
-    sma = df['close'].rolling(window=20).mean()
-    std = df['close'].rolling(window=20).std()
-    df['BB_upper'] = sma + (2 * std)
-    df['BB_lower'] = sma - (2 * std)
-
-    return df
-
-def format_price_safe(value: Union[float, str, None]) -> str:
-    """Format value as price"""
-    if value is None:
-        logger.debug("None value passed to format_price_safe")
-        return "0.0000"
+def analyze(symbol: str, interval: str = "60") -> Optional[Dict]:
+    """Analyze a symbol and generate a trading signal (from signal_generator.py)"""
     try:
-        val = float(value)
-        if val <= 0:
-            return "0.0000"
-        if val >= 1_000_000:
-            return f"{val / 1_000_000:.4f}M"
-        elif val >= 1_000:
-            return f"{val / 1_000:.4f}K"
-        else:
-            return f"{val:.4f}"
-    except (ValueError, TypeError) as e:
-        logger.warning(f"Invalid value for price formatting: {value}, error: {e}")
-        return "0.0000"
+        data = {}
+        for tf in INTERVALS:
+            candles = get_candles(symbol, tf)
+            if len(candles) < 30:
+                logger.warning(f"Insufficient candles for {symbol} on timeframe {tf}")
+                return None
+            closes = [c['close'] for c in candles]
+            highs = [c['high'] for c in candles]
+            lows = [c['low'] for c in candles]
+            vols = [c['volume'] for c in candles]
+            data[tf] = {
+                'close': closes[-1],
+                'ema9': ema(closes, 9),
+                'ema21': ema(closes, 21),
+                'sma20': sma(closes, 20),
+                'rsi': rsi(closes),
+                'macd': macd(closes),
+                'bb_up': bollinger(closes)[0],
+                'bb_mid': bollinger(closes)[1],
+                'bb_low': bollinger(closes)[2],
+                'atr': atr(highs, lows, closes),
+                'volume': vols[-1]
+            }
 
-def classify_trend(ema9: float, ema21: float, sma20: float) -> str:
-    """Classify market trend based on moving averages"""
-    try:
-        if ema9 > ema21 > sma20:
-            return "Up"
-        elif ema9 < ema21 < sma20:
-            return "Down"
-        elif ema9 > ema21:
-            return "Bullish"
-        elif ema9 < ema21:
-            return "Bearish"
-        return "Neutral"
-    except (TypeError, ValueError) as e:
-        logger.warning(f"Invalid values for trend classification: {e}")
-        return "Neutral"
+        tf60 = data['60']
+        if (tf60['volume'] < MIN_VOLUME or tf60['atr'] / tf60['close'] < MIN_ATR_PCT or
+            not (RSI_ZONE[0] < tf60['rsi'] < RSI_ZONE[1])):
+            logger.debug(f"Skipping {symbol} due to low volume, ATR, or RSI")
+            return None
 
-def score_signal(df: pd.DataFrame) -> float:
-    """Score trading signal based on indicators"""
-    required_cols = ['EMA_9', 'EMA_21', 'SMA_20', 'MACD', 'RSI', 'close', 'BB_upper', 'BB_lower']
-    if any(col not in df.columns or df[col].isna().iloc[-1] for col in required_cols):
-        return 0.0
+        sides = []
+        for d in data.values():
+            if d['close'] > d['bb_up']: sides.append('LONG')
+            elif d['close'] < d['bb_low']: sides.append('SHORT')
+            elif d['close'] > d['ema21']: sides.append('LONG')
+            elif d['close'] < d['ema21']: sides.append('SHORT')
 
-    score = 0.0
-    ema9 = df['EMA_9'].iloc[-1]
-    ema21 = df['EMA_21'].iloc[-1]
-    sma20 = df['SMA_20'].iloc[-1]
-    macd = df['MACD'].iloc[-1]
-    rsi = df['RSI'].iloc[-1]
-    close = df['close'].iloc[-1]
-    bb_upper = df['BB_upper'].iloc[-1]
-    bb_lower = df['BB_lower'].iloc[-1]
+        if len(set(sides)) != 1:
+            logger.debug(f"Skipping {symbol} due to inconsistent trend across timeframes")
+            return None
 
-    if ema9 > ema21 > sma20:
-        score += 30
-    elif ema9 > ema21:
-        score += 20
-    if macd > 0:
-        score += 20
-    if rsi < 30:
-        score += 15
-    elif rsi > 70:
-        score += 15
-    if close > bb_upper or close < bb_lower:
-        score += 15
+        tf = tf60
+        price = tf['close']
+        trend = classify_trend(tf['ema9'], tf['ema21'], tf['sma20'])
+        bb_dir = "Up" if price > tf['bb_up'] else "Down" if price < tf['bb_low'] else "No"
+        opts = [tf['sma20'], tf['ema9'], tf['ema21']]
+        entry = min(opts, key=lambda x: abs(x - price))
 
-    return min(score, 100.0)
+        side = 'Buy' if sides[0] == 'LONG' else 'Sell'
 
-def get_signals_safe(db) -> List:
-    """Safe wrapper for getting signals"""
-    try:
-        return db.get_signals(limit=50)
+        tp = round(entry * (1 + TP_PERCENT) if side == 'Buy' else entry * (1 - TP_PERCENT), 6)
+        sl = round(entry * (1 - SL_PERCENT) if side == 'Buy' else entry * (1 + SL_PERCENT), 6)
+        trail = round(entry * (1 - ENTRY_BUFFER_PCT) if side == 'Buy' else entry * (1 + ENTRY_BUFFER_PCT), 6)
+        liq = round(entry * (1 - 1 / LEVERAGE) if side == 'Buy' else entry * (1 + 1 / LEVERAGE), 6)
+
+        try:
+            risk_amt = ACCOUNT_BALANCE * RISK_PCT
+            sl_diff = abs(entry - sl)
+            if sl_diff <= 0:
+                logger.warning(f"Invalid stop-loss difference for {symbol}: {sl_diff}")
+                return None
+            qty = risk_amt / sl_diff
+            margin_usdt = round((qty * entry) / LEVERAGE, 3)
+            qty = round(qty, 3)
+        except (ZeroDivisionError, ValueError) as e:
+            logger.warning(f"Error calculating position size for {symbol}: {e}")
+            margin_usdt = 1.0
+            qty = 1.0
+
+        score = 0
+        score += 0.3 if tf['macd'] and tf['macd'] > 0 else 0
+        score += 0.2 if tf['rsi'] < 30 or tf['rsi'] > 70 else 0
+        score += 0.2 if bb_dir != "No" else 0
+        score += 0.3 if trend in ["Up", "Bullish"] else 0.1
+
+        return {
+            'symbol': symbol,
+            'side': side,
+            'type': trend,
+            'score': round(score * 100, 1),
+            'entry_price': round(entry, 6),
+            'tp': tp,
+            'sl': sl,
+            'trail': trail,
+            'margin_usdt': margin_usdt,
+            'qty': qty,
+            'market': price,
+            'liquidation': liq,
+            'bb_direction': bb_dir,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'timeframe': interval,
+            'strategy': "Multi-TF Signal",
+            'virtual': True
+        }
     except Exception as e:
-        logger.error(f"Error getting signals: {e}")
-        return []
+        logger.error(f"Error analyzing {symbol}: {e}")
+        return None
 
 def generate_real_signals(client: BybitClient, symbols: List[str], interval: str = "60", limit: int = 5) -> List[Dict]:
-    """Generate trading signals using signal_generator.py logic"""
+    """Generate trading signals and create a PDF"""
     signals = []
-    for symbol in symbols[:limit]:
-        try:
+    try:
+        for symbol in symbols[:limit]:
             signal = analyze(symbol, interval=interval)
             if signal:
-                signal['created_at'] = datetime.now(timezone.utc).isoformat()
                 signals.append(signal)
-        except Exception as e:
-            logger.error(f"Error generating signal for {symbol}: {e}")
-    return signals
+        signals.sort(key=lambda x: x['score'], reverse=True)
+        signals = signals[:5]  # Limit to top 5 signals
+
+        if signals:
+            # Generate PDF
+            pdf = SignalPDF()
+            pdf.add_page()
+            pdf.add_signals(signals)
+            fname = f"signals_{datetime.now(timezone(timedelta(hours=3))).strftime('%H%M')}.pdf"
+            pdf.output(fname)
+            logger.info(f"PDF saved: {fname}")
+        else:
+            logger.info("No valid signals generated")
+        return signals, fname if signals else None
+    except Exception as e:
+        logger.error(f"Error generating signals: {e}")
+        return [], None
 
 def display_signals(signals: List, container, title: str, page: int = 1, page_size: int = 5):
     """Reusable function to display signals"""
@@ -273,8 +273,7 @@ def show_signals(db, engine, client, trading_mode: str = "virtual"):
     with st.expander("Generate New Signals"):
         with st.container(border=True):
             st.markdown("### Generate Signals")
-            symbols = [s["symbol"] for s in client.get_symbols() if s["symbol"].endswith("USDT")]
-            symbols = [s for s in symbols if s not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]]
+            symbols = get_usdt_symbols()  # Use signal_generator.py's function
             selected_symbols = st.multiselect("Select Symbols", symbols, default=symbols[:3], key="signal_symbols_select")
             interval = st.selectbox("Timeframe", ["15", "60", "240"], index=1, key="signal_interval_select")
             if st.button("🔍 Generate Signals", type="primary", key="generate_signals_button"):
@@ -282,12 +281,25 @@ def show_signals(db, engine, client, trading_mode: str = "virtual"):
                     if not selected_symbols:
                         st.error("🚨 Please select at least one symbol")
                         return
-                    signals = generate_real_signals(client, selected_symbols, interval=interval, limit=10)
+                    signals, pdf_filename = generate_real_signals(client, selected_symbols, interval=interval, limit=10)
                     if signals and db and hasattr(db, 'add_signal'):
                         for signal in signals:
                             db.add_signal(signal)
                         st.success(f"✅ Generated {len(signals)} signals")
-                        st.rerun()
+                        with st.container(border=True):
+                            st.markdown("### Generated Signals")
+                            display_signals(signals, st, "Generated Signals")
+                        if pdf_filename and os.path.exists(pdf_filename):
+                            with open(pdf_filename, "rb") as f:
+                                st.download_button(
+                                    label="📄 Download Signals PDF",
+                                    data=f,
+                                    file_name=pdf_filename,
+                                    mime="application/pdf",
+                                    key="download_signals_pdf"
+                                )
+                        else:
+                            st.warning("⚠️ No PDF generated")
                     else:
                         st.info("🌙 No signals generated")
                 except Exception as e:
@@ -303,6 +315,17 @@ def show_signals(db, engine, client, trading_mode: str = "virtual"):
         st.session_state.sell_signals_page = 1
 
     # Fetch signals
+    def get_signals_safe(db):
+        """Safely fetch signals from the database."""
+        try:
+            if db and hasattr(db, "get_signals"):
+                return db.get_signals()
+            else:
+                return []
+        except Exception as e:
+            logger.error(f"Error fetching signals: {e}")
+            return []
+    
     signals = get_signals_safe(db)
 
     # Define tabs

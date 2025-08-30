@@ -4,8 +4,20 @@ from time import sleep
 import requests
 import sys
 from utils import get_candles, ema, sma, rsi, bollinger, atr, macd, classify_trend, RISK_PCT, ACCOUNT_BALANCE, LEVERAGE, ENTRY_BUFFER_PCT, MIN_VOLUME, MIN_ATR_PCT, RSI_ZONE, INTERVALS, MAX_SYMBOLS
-
+import logging
 tz_utc3 = timezone(timedelta(hours=3))
+
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # === PDF GENERATOR ===
 class SignalPDF(FPDF):
@@ -105,7 +117,7 @@ def analyze(symbol):
         qty = risk_amt / sl_diff
         margin_usdt = round((qty * entry) / LEVERAGE, 3)
         qty = round(qty, 3)
-    except:
+    except (ZeroDivisionError, ValueError) as e:
         margin_usdt = 1.0
         qty = 1.0
 
@@ -139,7 +151,8 @@ def get_usdt_symbols():
         tickers = [i for i in data['result']['list'] if i['symbol'].endswith("USDT")]
         tickers.sort(key=lambda x: float(x['turnover24h']), reverse=True)
         return [t['symbol'] for t in tickers[:MAX_SYMBOLS]]
-    except:
+    except Exception as e:
+        logger.error(f"Error fetching USDT symbols from Bybit: {e}")
         return []
 
 # === MAIN LOOP ===

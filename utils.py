@@ -60,6 +60,97 @@ def display_trades_table(trades, container, max_trades=5):
         container.error("Error displaying trades")
 
 # === INDICATORS ===
+def ema(data: List[float], period: int) -> float:
+    """Calculate Exponential Moving Average for the last value."""
+    try:
+        series = pd.Series(data, dtype=float)
+        if len(series) < period:
+            logger.warning(f"Insufficient data for EMA calculation: {len(series)} < {period}")
+            return 0.0
+        return series.ewm(span=period, adjust=False).mean().iloc[-1]
+    except Exception as e:
+        logger.error(f"Error calculating EMA: {e}")
+        return 0.0
+
+def sma(data: List[float], period: int) -> float:
+    """Calculate Simple Moving Average for the last value."""
+    try:
+        series = pd.Series(data, dtype=float)
+        if len(series) < period:
+            logger.warning(f"Insufficient data for SMA calculation: {len(series)} < {period}")
+            return 0.0
+        return series.rolling(window=period).mean().iloc[-1]
+    except Exception as e:
+        logger.error(f"Error calculating SMA: {e}")
+        return 0.0
+
+def rsi(data: List[float], period: int = 14) -> float:
+    """Calculate Relative Strength Index for the last value."""
+    try:
+        series = pd.Series(data, dtype=float)
+        if len(series) < period:
+            logger.warning(f"Insufficient data for RSI calculation: {len(series)} < {period}")
+            return 50.0
+        delta = series.diff()
+        gain = delta.where(delta > 0, 0.0)
+        loss = -delta.where(delta < 0, 0.0)
+        avg_gain = gain.rolling(period).mean()
+        avg_loss = loss.rolling(period).mean()
+        rs = avg_gain / (avg_loss + 1e-14)
+        rsi_value = 100 - (100 / (1 + rs))
+        return rsi_value.iloc[-1]
+    except Exception as e:
+        logger.error(f"Error calculating RSI: {e}")
+        return 50.0
+
+def bollinger(data: List[float], period: int = 20) -> Tuple[float, float, float]:
+    """Calculate Bollinger Bands (upper, middle, lower) for the last value."""
+    try:
+        series = pd.Series(data, dtype=float)
+        if len(series) < period:
+            logger.warning(f"Insufficient data for Bollinger Bands calculation: {len(series)} < {period}")
+            return 0.0, 0.0, 0.0
+        sma = series.rolling(window=period).mean()
+        std = series.rolling(window=period).std()
+        bb_upper = sma + (2 * std)
+        bb_lower = sma - (2 * std)
+        return bb_upper.iloc[-1], sma.iloc[-1], bb_lower.iloc[-1]
+    except Exception as e:
+        logger.error(f"Error calculating Bollinger Bands: {e}")
+        return 0.0, 0.0, 0.0
+
+def atr(highs: List[float], lows: List[float], closes: List[float], period: int = 14) -> float:
+    """Calculate Average True Range for the last value."""
+    try:
+        if len(highs) != len(lows) or len(lows) != len(closes) or len(closes) < period:
+            logger.warning(f"Insufficient or mismatched data for ATR calculation: {len(highs)}")
+            return 0.0
+        df = pd.DataFrame({'high': highs, 'low': lows, 'close': closes}, dtype=float)
+        high_low = df['high'] - df['low']
+        high_close = (df['high'] - df['close'].shift()).abs()
+        low_close = (df['low'] - df['close'].shift()).abs()
+        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+        atr_value = true_range.rolling(window=period).mean()
+        return atr_value.iloc[-1]
+    except Exception as e:
+        logger.error(f"Error calculating ATR: {e}")
+        return 0.0
+
+def macd(data: List[float], fast: int = 12, slow: int = 26, signal: int = 9) -> float:
+    """Calculate MACD line for the last value."""
+    try:
+        series = pd.Series(data, dtype=float)
+        if len(series) < max(fast, slow, signal):
+            logger.warning(f"Insufficient data for MACD calculation: {len(series)}")
+            return 0.0
+        ema_fast = series.ewm(span=fast, adjust=False).mean()
+        ema_slow = series.ewm(span=slow, adjust=False).mean()
+        macd_line = ema_fast - ema_slow
+        return macd_line.iloc[-1]
+    except Exception as e:
+        logger.error(f"Error calculating MACD: {e}")
+        return 0.0
+
 def calculate_indicators(data: Union[List[Dict], pd.DataFrame]) -> pd.DataFrame:
     """Calculate technical indicators"""
     if isinstance(data, list):
@@ -243,43 +334,37 @@ def calculate_drawdown(equity_curve: Union[List[float], pd.Series]) -> Tuple[flo
         return 0.0, pd.Series(dtype=float)
 
 def get_ticker_snapshot() -> List[Dict[str, Any]]:
-    """Get ticker snapshot from Bybit API with Binance fallback"""
+    """Get ticker snapshot from Bybit API"""
     major_symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "DOGEUSDT", "AVAXUSDT"]
     
-    endpoints = [
-        {"url": "https://api.bybit.com/v5/market/tickers", "params": {"category": "linear"}, "is_bybit": True},
-        {"url": "https://api.binance.com/api/v3/ticker/24hr", "params": {}, "is_bybit": False}
-    ]
+    try:
+        response = requests.get("https://api.bybit.com/v5/market/tickers", params={"category": "linear"}, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        tickers = data.get("result", {}).get("list", [])
+        live_data = []
+        for ticker in tickers:
+            symbol = ticker.get("symbol")
+            if symbol in major_symbols:
+                try:
+                    live_data.append({
+                        "symbol": symbol,
+                        "lastPrice": float(ticker.get("lastPrice", 0)),
+                        "priceChangePercent": float(ticker.get("priceChangePercent", 0))
+                    })
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Invalid ticker data for {symbol}: {e}")
+                    continue
+        if live_data:
+            logger.info("Successfully fetched ticker data from Bybit")
+            return live_data
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching ticker from Bybit: {e}")
+        if response.status_code == 429:
+            logger.warning("Rate limit exceeded, retrying after delay")
+            time.sleep(5)
     
-    for endpoint in endpoints:
-        try:
-            response = requests.get(endpoint["url"], params=endpoint["params"], timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            tickers = data.get("result", {}).get("list", []) if endpoint["is_bybit"] else data
-            live_data = []
-            for ticker in tickers:
-                symbol = ticker.get("symbol")
-                if symbol in major_symbols:
-                    try:
-                        live_data.append({
-                            "symbol": symbol,
-                            "lastPrice": float(ticker.get("lastPrice", ticker.get("last", 0))),
-                            "priceChangePercent": float(ticker.get("priceChangePercent", ticker.get("priceChangePercent", 0)))
-                        })
-                    except (ValueError, TypeError) as e:
-                        logger.warning(f"Invalid ticker data for {symbol}: {e}")
-                        continue
-            if live_data:
-                logger.info(f"Successfully fetched ticker data from {endpoint['url']}")
-                return live_data
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching ticker from {endpoint['url']}: {e}")
-            if response.status_code == 429:
-                logger.warning("Rate limit exceeded, retrying after delay")
-                time.sleep(5)
-    
-    logger.warning("All ticker API attempts failed")
+    logger.warning("Failed to fetch ticker data from Bybit")
     return []
 
 def get_ticker_snapshot_safe() -> List[Dict[str, Any]]:
@@ -291,153 +376,92 @@ def get_ticker_snapshot_safe() -> List[Dict[str, Any]]:
         return []
 
 def get_kline_data(symbol: str, interval: str, limit: int = 200) -> pd.DataFrame:
-    """Get kline data from Bybit API with Binance fallback"""
-    endpoints = [
-        {
-            "url": "https://api.bybit.com/v5/market/kline",
-            "params": {"category": "linear", "symbol": symbol, "interval": interval, "limit": limit},
-            "is_bybit": True
-        },
-        {
-            "url": f"https://api.binance.com/api/v3/klines",
-            "params": {"symbol": symbol, "interval": interval, "limit": limit},
-            "is_bybit": False
-        }
-    ]
+    """Get kline data from Bybit API"""
+    try:
+        response = requests.get(
+            "https://api.bybit.com/v5/market/kline",
+            params={"category": "linear", "symbol": symbol, "interval": interval, "limit": limit},
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
+            timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+        if data.get("retCode") == 0 and data.get("result", {}).get("list"):
+            klines = data["result"]["list"]
+            df_data = [
+                {
+                    'timestamp': pd.to_datetime(int(kline[0]), unit='ms'),
+                    'open': float(kline[1]),
+                    'high': float(kline[2]),
+                    'low': float(kline[3]),
+                    'close': float(kline[4]),
+                    'volume': float(kline[5])
+                } for kline in reversed(klines)
+            ]
+            logger.info(f"Successfully fetched kline data for {symbol} from Bybit")
+            return pd.DataFrame(df_data)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching kline data from Bybit: {e}")
+        if response.status_code == 429:
+            logger.warning("Rate limit exceeded, retrying after delay")
+            time.sleep(5)
 
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-
-    for endpoint in endpoints:
-        try:
-            response = requests.get(endpoint["url"], params=endpoint["params"], headers=headers, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            if endpoint["is_bybit"]:
-                if data.get("retCode") == 0 and data.get("result", {}).get("list"):
-                    klines = data["result"]["list"]
-                    df_data = [
-                        {
-                            'timestamp': pd.to_datetime(int(kline[0]), unit='ms'),
-                            'open': float(kline[1]),
-                            'high': float(kline[2]),
-                            'low': float(kline[3]),
-                            'close': float(kline[4]),
-                            'volume': float(kline[5])
-                        } for kline in reversed(klines)
-                    ]
-                    logger.info(f"Successfully fetched kline data for {symbol} from Bybit")
-                    return pd.DataFrame(df_data)
-            else:
-                df_data = [
-                    {
-                        'timestamp': pd.to_datetime(int(kline[0]), unit='ms'),
-                        'open': float(kline[1]),
-                        'high': float(kline[2]),
-                        'low': float(kline[3]),
-                        'close': float(kline[4]),
-                        'volume': float(kline[5])
-                    } for kline in data
-                ]
-                logger.info(f"Successfully fetched kline data for {symbol} from Binance")
-                return pd.DataFrame(df_data)
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching kline data from {endpoint['url']}: {e}")
-            if response.status_code == 429:
-                logger.warning("Rate limit exceeded, retrying after delay")
-                time.sleep(5)
-
-    logger.warning(f"Failed to fetch kline data for {symbol} from all sources")
+    logger.warning(f"Failed to fetch kline data for {symbol} from Bybit")
     return pd.DataFrame()
 
 def get_candles(symbol: str, interval: str) -> List[Dict]:
-    """Fetch candles from Bybit API with Binance fallback"""
-    endpoints = [
-        {
-            "url": f"https://api.bybit.com/v5/market/kline",
-            "params": {"category": "linear", "symbol": symbol, "interval": interval, "limit": 200},
-            "is_bybit": True
-        },
-        {
-            "url": f"https://api.binance.com/api/v3/klines",
-            "params": {"symbol": symbol, "interval": interval, "limit": 200},
-            "is_bybit": False
-        }
-    ]
+    """Fetch candles from Bybit API"""
+    try:
+        response = requests.get(
+            "https://api.bybit.com/v5/market/kline",
+            params={"category": "linear", "symbol": symbol, "interval": interval, "limit": 200},
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
+            timeout=5
+        )
+        response.raise_for_status()
+        data = response.json()
+        if data.get("retCode") == 0 and data.get("result", {}).get("list"):
+            klines = data["result"]["list"]
+            candles = [
+                {
+                    'high': float(kline[2]),
+                    'low': float(kline[3]),
+                    'close': float(kline[4]),
+                    'volume': float(kline[5]),
+                    'timestamp': pd.to_datetime(int(kline[0]), unit='ms')
+                } for kline in reversed(klines)
+            ]
+            logger.info(f"Successfully fetched candles for {symbol} from Bybit")
+            return candles
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching candles for {symbol} from Bybit: {e}")
+        if response.status_code == 429:
+            logger.warning("Rate limit exceeded, retrying after delay")
+            time.sleep(5)
 
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-
-    for endpoint in endpoints:
-        try:
-            response = requests.get(endpoint["url"], params=endpoint["params"], headers=headers, timeout=5)
-            response.raise_for_status()
-            data = response.json()
-            if endpoint["is_bybit"]:
-                if data.get("retCode") == 0 and data.get("result", {}).get("list"):
-                    klines = data["result"]["list"]
-                    candles = [
-                        {
-                            'high': float(kline[2]),
-                            'low': float(kline[3]),
-                            'close': float(kline[4]),
-                            'volume': float(kline[5]),
-                            'timestamp': pd.to_datetime(int(kline[0]), unit='ms')
-                        } for kline in reversed(klines)
-                    ]
-                    logger.info(f"Successfully fetched candles for {symbol} from Bybit")
-                    return candles
-            else:
-                candles = [
-                    {
-                        'high': float(kline[2]),
-                        'low': float(kline[3]),
-                        'close': float(kline[4]),
-                        'volume': float(kline[5]),
-                        'timestamp': pd.to_datetime(int(kline[0]), unit='ms')
-                    } for kline in data
-                ]
-                logger.info(f"Successfully fetched candles for {symbol} from Binance")
-                return candles
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching candles for {symbol} from {endpoint['url']}: {e}")
-            if response.status_code == 429:
-                logger.warning("Rate limit exceeded, retrying after delay")
-                time.sleep(5)
-
-    logger.warning(f"Failed to fetch candles for {symbol} from all sources")
+    logger.warning(f"Failed to fetch candles for {symbol} from Bybit")
     return []
 
 def get_current_price(symbol: str) -> float:
-    """Get current price from Bybit API with Binance fallback"""
-    endpoints = [
-        {"url": f"https://api.bybit.com/v5/market/tickers?category=linear&symbol={symbol}", "is_bybit": True},
-        {"url": f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}", "is_bybit": False}
-    ]
+    """Get current price from Bybit API"""
+    try:
+        response = requests.get(
+            f"https://api.bybit.com/v5/market/tickers?category=linear&symbol={symbol}",
+            timeout=5
+        )
+        response.raise_for_status()
+        data = response.json()
+        if data.get("retCode") == 0:
+            price = float(data["result"]["list"][0]["lastPrice"])
+            logger.info(f"Successfully fetched price for {symbol} from Bybit: {price}")
+            return price
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error getting price for {symbol} from Bybit: {e}")
+        if response.status_code == 429:
+            logger.warning("Rate limit exceeded, retrying after delay")
+            time.sleep(5)
 
-    for endpoint in endpoints:
-        try:
-            response = requests.get(endpoint["url"], timeout=5)
-            response.raise_for_status()
-            data = response.json()
-            if endpoint["is_bybit"]:
-                if data.get("retCode") == 0:
-                    price = float(data["result"]["list"][0]["lastPrice"])
-                    logger.info(f"Successfully fetched price for {symbol} from Bybit: {price}")
-                    return price
-            else:
-                price = float(data["price"])
-                logger.info(f"Successfully fetched price for {symbol} from Binance: {price}")
-                return price
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error getting price for {symbol} from {endpoint['url']}: {e}")
-            if response.status_code == 429:
-                logger.warning("Rate limit exceeded, retrying after delay")
-                time.sleep(5)
-
-    logger.warning(f"Failed to fetch price for {symbol} from all sources")
+    logger.warning(f"Failed to fetch price for {symbol} from Bybit")
     return 0.0
 
 def get_current_price_safe(symbol: str) -> float:
@@ -645,7 +669,7 @@ def generate_real_signals(symbols: List[str], interval: str = "60", limit: int =
                 "timeframe": interval,
                 "confidence": score,
                 "market": "Bybit",
-                "virtual": False,  # Enable real trades if client is connected
+                "virtual": False,
                 "indicators": {
                     "rsi": rsi,
                     "ema_9": ema_9,
@@ -665,4 +689,3 @@ def generate_real_signals(symbols: List[str], interval: str = "60", limit: int =
             continue
 
     return signals[:settings.get('TOP_N_SIGNALS', 5)]
-
