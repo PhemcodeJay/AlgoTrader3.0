@@ -3,21 +3,11 @@ from datetime import datetime, timedelta, timezone
 from time import sleep
 import requests
 import sys
+import json
+import argparse
 from utils import get_candles, ema, sma, rsi, bollinger, atr, macd, classify_trend, RISK_PCT, ACCOUNT_BALANCE, LEVERAGE, ENTRY_BUFFER_PCT, MIN_VOLUME, MIN_ATR_PCT, RSI_ZONE, INTERVALS, MAX_SYMBOLS
-import logging
+
 tz_utc3 = timezone(timedelta(hours=3))
-
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
 
 # === PDF GENERATOR ===
 class SignalPDF(FPDF):
@@ -31,7 +21,6 @@ class SignalPDF(FPDF):
             self.set_text_color(0, 0, 0)
             self.set_font("Courier", "B", 8)
             self.cell(0, 5, f"==================== {s['Symbol']} ====================", ln=1)
-            self.set_font("Courier", "", 8)
             self.set_text_color(0, 0, 139)
             self.cell(0, 4, f"TYPE: {s['Type']}    SIDE: {s['Side']}     SCORE: {s['Score']}%", ln=1)
             self.set_text_color(34, 139, 34)
@@ -58,7 +47,7 @@ def format_signal_block(s):
     )
 
 # === SIGNAL ANALYSIS ===
-def analyze(symbol):
+def analyze(symbol, interval="60"):
     data = {}
     for tf in INTERVALS:
         candles = get_candles(symbol, tf)
@@ -117,13 +106,13 @@ def analyze(symbol):
         qty = risk_amt / sl_diff
         margin_usdt = round((qty * entry) / LEVERAGE, 3)
         qty = round(qty, 3)
-    except (ZeroDivisionError, ValueError) as e:
+    except (ZeroDivisionError, ValueError):
         margin_usdt = 1.0
         qty = 1.0
 
     score = 0
     score += 0.3 if tf['macd'] and tf['macd'] > 0 else 0
-    score += 0.2 if tf['rsi'] < 30 or tf['rsi'] > 70 else 0
+    score += 0.2 if tf['rsi'] < RSI_ZONE[0] or tf['rsi'] > RSI_ZONE[1] else 0
     score += 0.2 if bb_dir != "No" else 0
     score += 0.3 if trend in ["Up", "Bullish"] else 0.1
 
@@ -152,42 +141,48 @@ def get_usdt_symbols():
         tickers.sort(key=lambda x: float(x['turnover24h']), reverse=True)
         return [t['symbol'] for t in tickers[:MAX_SYMBOLS]]
     except Exception as e:
-        logger.error(f"Error fetching USDT symbols from Bybit: {e}")
+        print(f"Error fetching USDT symbols from Bybit: {e}")
         return []
 
-# === MAIN LOOP ===
-def main():
-    while True:
-        print("\n🔍 Scanning Bybit USDT Futures for filtered signals...\n")
-        symbols = get_usdt_symbols()
-        signals = [analyze(s) for s in symbols]
-        signals = [s for s in signals if s]
+# === SIGNAL GENERATION ===
+def generate_signals(symbols, interval="60"):
+    signals = [analyze(s, interval) for s in symbols]
+    signals = [s for s in signals if s]
+    signals.sort(key=lambda x: x['Score'], reverse=True)
+    return signals[:5]
 
-        if signals:
-            signals.sort(key=lambda x: x['Score'], reverse=True)
-            top5 = signals[:5]
-            blocks = [format_signal_block(s) for s in top5]
-            agg_msg = "\n".join(blocks)
+# === MAIN FUNCTION ===
+def main(symbols=None, interval="60"):
+    symbols = symbols or get_usdt_symbols()
+    print("\n🔍 Scanning Bybit USDT Futures for filtered signals...\n")
+    signals = generate_signals(symbols, interval)
+    
+    if signals:
+        blocks = [format_signal_block(s) for s in signals]
+        for blk in blocks:
+            print(blk)
 
-            for blk in blocks:
-                print(blk)
+        # Save signals to JSON
+        with open("signals.json", "w") as f:
+            json.dump(signals, f, indent=2)
 
-            pdf = SignalPDF()
-            pdf.add_page()
-            pdf.add_signals(signals[:20])
-            fname = f"signals_{datetime.now(tz_utc3).strftime('%H%M')}.pdf"
-            pdf.output(fname)
-            print(f"📄 PDF saved: {fname}\n")
-        else:
-            print("⚠️ No valid signals found\n")
-
-        wait = 3600
-        print("⏳ Rescanning in 60 minutes...")
-        for i in range(wait, 0, -1):
-            sys.stdout.write(f"\r⏱️  Next scan in {i//60:02d}:{i%60:02d}")
-            sys.stdout.flush()
-            sleep(1)
-        print()
+        # Generate PDF
+        pdf = SignalPDF()
+        pdf.add_page()
+        pdf.add_signals(signals)
+        fname = f"signals_{datetime.now(tz_utc3).strftime('%H%M')}.pdf"
+        pdf.output(fname)
+        print(f"📄 PDF saved: {fname}\n")
+        return signals, fname
+    else:
+        print("⚠️ No valid signals found\n")
+        return [], None
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate trading signals for Bybit")
+    parser.add_argument("--symbols", type=str, help="Comma-separated list of symbols (e.g., BTCUSDT,ETHUSDT)")
+    parser.add_argument("--interval", type=str, default="60", choices=["15", "60", "240"], help="Timeframe interval")
+    args = parser.parse_args()
+
+    symbols = args.symbols.split(",") if args.symbols else None
+    main(symbols, args.interval)

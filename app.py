@@ -2,8 +2,9 @@ import streamlit as st
 import logging
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional
+import json
 
 # Views
 from views.dashboard import show_dashboard
@@ -14,27 +15,43 @@ from views.portfolio import show_portfolio
 from views.automation import show_automation
 from views.logs import show_logs
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging (single configuration)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Utility functions
 def format_currency_safe(value: Optional[float]) -> str:
     """Format currency safely"""
-    return f"${value:.2f}" if value is not None else "$0.00"
+    try:
+        return f"${float(value):.2f}" if value is not None else "$0.00"
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Invalid value for currency formatting: {value}, error: {e}")
+        return "$0.00"
 
 def load_virtual_balance() -> Dict[str, float]:
     """Load virtual balance from capital.json"""
     try:
-        from bybit_client import _load_json_file
-        capital_data = _load_json_file("capital.json", {"virtual": {"capital": 100.0, "available": 100.0}})
-        return capital_data.get("virtual", {"capital": 100.0, "available": 100.0})
+        if os.path.exists("capital.json"):
+            with open("capital.json", "r", encoding="utf-8") as f:
+                capital_data = json.load(f)
+                return capital_data.get("virtual", {"capital": 100.0, "available": 100.0})
+        else:
+            logger.info("capital.json not found, using default balance")
+            return {"capital": 100.0, "available": 100.0}
     except Exception as e:
         logger.error(f"Error loading virtual balance: {e}")
+        st.error(f"🚨 Error loading virtual balance: {e}")
         return {"capital": 100.0, "available": 100.0}
 
 # Ensure UTF-8 output
-sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+sys.stdout.reconfigure(encoding="utf-8")
 
 # Custom CSS for modern, colorful styling
 CSS = """
@@ -105,7 +122,12 @@ def init_components():
         from automated_trader import AutomatedTrader
 
         database_url = os.getenv("DATABASE_URL", "sqlite:///trading.db")
-        init_db()
+        try:
+            init_db()
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {e}")
+            st.warning("⚠️ Database initialization failed, continuing with limited functionality")
+
         db_manager_instance = db_manager
         engine = TradingEngine()
         client = BybitClient()
@@ -129,7 +151,7 @@ def init_session_state():
         'trading_mode': 'virtual',
         'selected_symbol': 'BTCUSDT',
         'position_size': 0.01,
-        'leverage': 10,
+        'leverage': 10,  # Matches signals.py
         'log_level': 'INFO',
         'last_refresh': datetime.now().timestamp()
     }
@@ -149,17 +171,6 @@ def main():
             initial_sidebar_state="expanded"
         )
 
-        # Configure logging
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('app.log'),
-                logging.StreamHandler()
-            ]
-        )
-        logger = logging.getLogger(__name__)
-
         # Apply custom CSS
         st.markdown(CSS, unsafe_allow_html=True)
 
@@ -167,7 +178,7 @@ def main():
 
         db, engine, client, automated_trader = init_components()
 
-        if not db or not engine:
+        if not db or not engine or not client:
             st.error("❌ Failed to initialize core components. Please check logs.")
             st.info("💡 Try refreshing the page or check the application logs.")
             return
@@ -195,13 +206,17 @@ def main():
                 st.warning("🔴 Real Mode")
 
             # Live data status
-            if client and client.is_connected():
-                st.success("📡 Live Data")
-            else:
+            try:
+                if client and hasattr(client, 'is_connected') and client.is_connected():
+                    st.success("📡 Live Data")
+                else:
+                    st.info("🌐 Real-Time Market Data (Public)")
+            except AttributeError:
+                logger.warning("BybitClient does not have is_connected method")
                 st.info("🌐 Real-Time Market Data (Public)")
 
             # Data freshness indicator
-            current_time = datetime.now().strftime("%H:%M:%S")
+            current_time = datetime.now(timezone(timedelta(hours=3))).strftime("%H:%M:%S")
             st.caption(f"Last updated: {current_time}")
 
             st.markdown("---")
@@ -233,13 +248,15 @@ def main():
 
             # Real Wallet
             try:
-                if client and client.is_connected():
+                if client and hasattr(client, 'get_wallet_balance'):
                     real_balance = client.get_wallet_balance()
+                    total_equity = real_balance.get('totalEquity', 0) if isinstance(real_balance, dict) else 0
+                    available_balance = real_balance.get('totalAvailableBalance', 0) if isinstance(real_balance, dict) else 0
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.metric("Real Balance", format_currency_safe(real_balance.get('totalEquity', 0)))
+                        st.metric("Real Balance", format_currency_safe(total_equity))
                     with col2:
-                        st.metric("Real Available", format_currency_safe(real_balance.get('totalAvailableBalance', 0)))
+                        st.metric("Real Available", format_currency_safe(available_balance))
                 else:
                     st.info("⚠️ No API connection")
                     st.metric("Real Balance", "$0.00")

@@ -1,0 +1,286 @@
+2025-08-30 18:25:53,015 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-30 18:25:53,027 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:25:53,028 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:25:57,172 - views.dashboard - ERROR - Error getting trades: (psycopg2.errors.UndefinedColumn) column trades.strategy does not exist
+LINE 1: ...unrealized_pnl, trades.virtual AS trades_virtual, trades.str...
+                                                             ^
+
+[SQL: SELECT trades.id AS trades_id, trades.symbol AS trades_symbol, trades.side AS trades_side, trades.qty AS trades_qty, trades.entry_price AS trades_entry_price, trades.exit_price AS trades_exit_price, trades.stop_loss AS trades_stop_loss, trades.take_profit AS trades_take_profit, trades.leverage AS trades_leverage, trades.margin_usdt AS trades_margin_usdt, trades.pnl AS trades_pnl, trades.timestamp AS trades_timestamp, trades.status AS trades_status, trades.order_id AS trades_order_id, trades.unrealized_pnl AS trades_unrealized_pnl, trades.virtual AS trades_virtual, trades.strategy AS trades_strategy, trades.score AS trades_score 
+FROM trades ORDER BY trades.timestamp DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 50}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-30 18:25:57,209 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x00000221095A5810>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:25:58,214 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x00000221095A6490>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:25:59,219 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x00000221095A6850>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:26:00,221 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 18:26:00,222 - bybit_client - ERROR - No price available for BNBUSDT
+2025-08-30 18:26:00,289 - views.dashboard - ERROR - Error getting trades: (psycopg2.errors.UndefinedColumn) column trades.strategy does not exist
+LINE 1: ...unrealized_pnl, trades.virtual AS trades_virtual, trades.str...
+                                                             ^
+
+[SQL: SELECT trades.id AS trades_id, trades.symbol AS trades_symbol, trades.side AS trades_side, trades.qty AS trades_qty, trades.entry_price AS trades_entry_price, trades.exit_price AS trades_exit_price, trades.stop_loss AS trades_stop_loss, trades.take_profit AS trades_take_profit, trades.leverage AS trades_leverage, trades.margin_usdt AS trades_margin_usdt, trades.pnl AS trades_pnl, trades.timestamp AS trades_timestamp, trades.status AS trades_status, trades.order_id AS trades_order_id, trades.unrealized_pnl AS trades_unrealized_pnl, trades.virtual AS trades_virtual, trades.strategy AS trades_strategy, trades.score AS trades_score 
+FROM trades ORDER BY trades.timestamp DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 50}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-30 18:26:00,321 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:26:00,323 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:26:00,478 - views.positions - ERROR - Error getting open trades: (psycopg2.errors.UndefinedColumn) column trades.strategy does not exist
+LINE 1: ...unrealized_pnl, trades.virtual AS trades_virtual, trades.str...
+                                                             ^
+
+[SQL: SELECT trades.id AS trades_id, trades.symbol AS trades_symbol, trades.side AS trades_side, trades.qty AS trades_qty, trades.entry_price AS trades_entry_price, trades.exit_price AS trades_exit_price, trades.stop_loss AS trades_stop_loss, trades.take_profit AS trades_take_profit, trades.leverage AS trades_leverage, trades.margin_usdt AS trades_margin_usdt, trades.pnl AS trades_pnl, trades.timestamp AS trades_timestamp, trades.status AS trades_status, trades.order_id AS trades_order_id, trades.unrealized_pnl AS trades_unrealized_pnl, trades.virtual AS trades_virtual, trades.strategy AS trades_strategy, trades.score AS trades_score 
+FROM trades 
+WHERE trades.status = %(status_1)s]
+[parameters: {'status_1': 'open'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-30 18:26:00,872 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:26:01,032 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:26:01,276 - views.orders - ERROR - Error getting trades: (psycopg2.errors.UndefinedColumn) column trades.strategy does not exist
+LINE 1: ...unrealized_pnl, trades.virtual AS trades_virtual, trades.str...
+                                                             ^
+
+[SQL: SELECT trades.id AS trades_id, trades.symbol AS trades_symbol, trades.side AS trades_side, trades.qty AS trades_qty, trades.entry_price AS trades_entry_price, trades.exit_price AS trades_exit_price, trades.stop_loss AS trades_stop_loss, trades.take_profit AS trades_take_profit, trades.leverage AS trades_leverage, trades.margin_usdt AS trades_margin_usdt, trades.pnl AS trades_pnl, trades.timestamp AS trades_timestamp, trades.status AS trades_status, trades.order_id AS trades_order_id, trades.unrealized_pnl AS trades_unrealized_pnl, trades.virtual AS trades_virtual, trades.strategy AS trades_strategy, trades.score AS trades_score 
+FROM trades ORDER BY trades.timestamp DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 50}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-30 18:26:01,284 - views.orders - ERROR - Error getting trades: (psycopg2.errors.UndefinedColumn) column trades.strategy does not exist
+LINE 1: ...unrealized_pnl, trades.virtual AS trades_virtual, trades.str...
+                                                             ^
+
+[SQL: SELECT trades.id AS trades_id, trades.symbol AS trades_symbol, trades.side AS trades_side, trades.qty AS trades_qty, trades.entry_price AS trades_entry_price, trades.exit_price AS trades_exit_price, trades.stop_loss AS trades_stop_loss, trades.take_profit AS trades_take_profit, trades.leverage AS trades_leverage, trades.margin_usdt AS trades_margin_usdt, trades.pnl AS trades_pnl, trades.timestamp AS trades_timestamp, trades.status AS trades_status, trades.order_id AS trades_order_id, trades.unrealized_pnl AS trades_unrealized_pnl, trades.virtual AS trades_virtual, trades.strategy AS trades_strategy, trades.score AS trades_score 
+FROM trades ORDER BY trades.timestamp DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 50}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-30 18:26:02,038 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:26:02,041 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:26:02,124 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000022109BE02D0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:26:02,273 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:26:02,286 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:26:02,506 - views.portfolio - ERROR - Error getting trades: (psycopg2.errors.UndefinedColumn) column trades.strategy does not exist
+LINE 1: ...unrealized_pnl, trades.virtual AS trades_virtual, trades.str...
+                                                             ^
+
+[SQL: SELECT trades.id AS trades_id, trades.symbol AS trades_symbol, trades.side AS trades_side, trades.qty AS trades_qty, trades.entry_price AS trades_entry_price, trades.exit_price AS trades_exit_price, trades.stop_loss AS trades_stop_loss, trades.take_profit AS trades_take_profit, trades.leverage AS trades_leverage, trades.margin_usdt AS trades_margin_usdt, trades.pnl AS trades_pnl, trades.timestamp AS trades_timestamp, trades.status AS trades_status, trades.order_id AS trades_order_id, trades.unrealized_pnl AS trades_unrealized_pnl, trades.virtual AS trades_virtual, trades.strategy AS trades_strategy, trades.score AS trades_score 
+FROM trades ORDER BY trades.timestamp DESC 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 10}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-30 18:26:02,673 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:26:02,684 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:38:15,899 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-30 18:38:15,916 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:38:15,916 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:38:18,181 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001F821FB0F50>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:38:19,193 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001F821FB2AD0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:38:20,200 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001F821FB2E90>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:38:21,201 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 18:38:21,204 - bybit_client - ERROR - No price available for BNBUSDT
+2025-08-30 18:38:21,270 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:38:21,282 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:38:21,449 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:38:21,756 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:38:22,497 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:38:22,497 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:38:22,550 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001F821FB3110>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 18:38:22,643 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:38:22,649 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 18:38:23,099 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 18:38:23,100 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:45:36,442 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-30 21:45:36,472 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:45:36,472 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:46:05,265 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C0550>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:46:17,909 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C1BD0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:46:30,550 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C1F90>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:46:31,552 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 21:46:31,553 - bybit_client - ERROR - No price available for BNBUSDT
+2025-08-30 21:46:31,617 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:46:31,618 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:46:43,957 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:46:43,970 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:46:57,803 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:46:57,804 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:47:20,545 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:47:20,545 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:47:43,505 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x00000206040DC050>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:47:43,712 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:47:43,714 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:47:55,218 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:47:55,225 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:48:37,964 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:48:37,974 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:48:49,384 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:49:12,308 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCDD10>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:49:24,705 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCE210>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:49:37,040 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCE490>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:49:38,079 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 21:49:38,082 - bybit_client - ERROR - No price available for BNBUSDT
+2025-08-30 21:50:12,383 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C02D0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:50:37,725 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C02D0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:51:07,059 - automated_trader - INFO - Trading loop started
+2025-08-30 21:51:07,059 - automated_trader - INFO - Automated trading system started
+2025-08-30 21:51:07,072 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-30 21:51:18,563 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=BTCUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C1F90>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:51:18,565 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:51:29,883 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=ETHUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C0410>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:51:29,884 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:51:41,213 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=DOGEUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060AC0E210>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:51:41,218 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:51:52,544 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=SOLUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C1F90>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:51:52,550 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:52:03,865 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=XRPUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060AC0E490>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:52:03,865 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCE710>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:52:03,866 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:52:04,121 - db - INFO - Signal added to DB
+2025-08-30 21:52:04,136 - db - INFO - Signal added to DB
+2025-08-30 21:52:04,140 - db - INFO - Signal added to DB
+2025-08-30 21:52:04,141 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-30 21:52:04,164 - db - INFO - Trade added to DB
+2025-08-30 21:52:04,166 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-30 21:52:04,170 - db - INFO - Trade added to DB
+2025-08-30 21:52:04,170 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-30 21:52:04,173 - db - INFO - Trade added to DB
+2025-08-30 21:52:04,174 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-30 21:52:16,327 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCDD10>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:52:28,467 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCC550>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:52:29,470 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 21:52:29,471 - bybit_client - ERROR - No price available for BNBUSDT
+2025-08-30 21:53:04,178 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-30 21:53:15,307 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=BTCUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060AC0DE50>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:53:15,312 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:53:26,463 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=ETHUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060AC0DD10>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:53:26,469 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:53:37,624 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/kline?category=linear&symbol=DOGEUSDT&interval=15&limit=200 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C1F90>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:53:37,625 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:53:50,054 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:53:50,056 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:53:55,398 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:53:55,435 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:53:55,500 - db - INFO - Signal added to DB
+2025-08-30 21:53:55,508 - db - INFO - Signal added to DB
+2025-08-30 21:53:55,587 - db - INFO - Signal added to DB
+2025-08-30 21:53:55,589 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-30 21:53:55,593 - db - INFO - Trade added to DB
+2025-08-30 21:53:55,753 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-30 21:53:55,908 - db - INFO - Trade added to DB
+2025-08-30 21:53:55,926 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-30 21:53:55,931 - db - INFO - Trade added to DB
+2025-08-30 21:53:55,939 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-30 21:54:52,781 - bybit_client - WARNING - No open virtual position found for BTCUSDT with side Buy
+2025-08-30 21:54:55,951 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-30 21:55:01,054 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:55:01,057 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:55:06,215 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:55:06,220 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:55:11,342 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:55:11,343 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:55:16,434 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:55:16,436 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:55:21,627 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:55:21,628 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:55:21,640 - db - INFO - Signal added to DB
+2025-08-30 21:55:21,658 - db - INFO - Signal added to DB
+2025-08-30 21:55:21,662 - db - INFO - Signal added to DB
+2025-08-30 21:55:21,663 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-30 21:55:21,666 - db - INFO - Trade added to DB
+2025-08-30 21:55:21,667 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-30 21:55:21,671 - db - INFO - Trade added to DB
+2025-08-30 21:55:21,673 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-30 21:55:21,677 - db - INFO - Trade added to DB
+2025-08-30 21:55:21,677 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-30 21:55:25,602 - views.signals - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 21:55:25,603 - __main__ - ERROR - Error in page Signals: 'Signal' object has no attribute 'get'
+2025-08-30 21:55:53,918 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-30 21:55:56,074 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-30 21:55:57,550 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-30 21:55:59,013 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-30 21:56:00,067 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-30 21:56:01,902 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-30 21:56:05,300 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-30 21:56:10,655 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:56:10,660 - views.signals - ERROR - Error analyzing SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:56:10,663 - views.signals - ERROR - Error generating signals: 'Symbol'
+2025-08-30 21:56:10,673 - views.signals - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 21:56:10,675 - __main__ - ERROR - Error in page Signals: 'Signal' object has no attribute 'get'
+2025-08-30 21:56:21,681 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-30 21:56:26,946 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:56:26,950 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:56:32,212 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:56:32,213 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:56:37,305 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:56:37,305 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:56:42,398 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:56:42,399 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:56:47,565 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:56:47,565 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:56:47,607 - db - INFO - Signal added to DB
+2025-08-30 21:56:47,619 - db - INFO - Signal added to DB
+2025-08-30 21:56:47,636 - db - INFO - Signal added to DB
+2025-08-30 21:56:47,637 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-30 21:56:47,642 - db - INFO - Trade added to DB
+2025-08-30 21:56:47,642 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-30 21:56:47,647 - db - INFO - Trade added to DB
+2025-08-30 21:56:47,649 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-30 21:56:47,653 - db - INFO - Trade added to DB
+2025-08-30 21:56:47,653 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-30 21:57:47,658 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-30 21:57:51,131 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 21:57:52,833 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:57:52,833 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:57:58,383 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:57:58,383 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:58:03,666 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:58:03,669 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:58:08,913 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:58:08,913 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:58:11,602 - automated_trader - INFO - Automated trading system stopped
+2025-08-30 21:58:14,126 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-30 21:58:14,128 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-30 21:58:14,139 - db - INFO - Signal added to DB
+2025-08-30 21:58:14,159 - db - INFO - Signal added to DB
+2025-08-30 21:58:14,218 - db - INFO - Signal added to DB
+2025-08-30 21:58:14,220 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-30 21:58:14,226 - db - INFO - Trade added to DB
+2025-08-30 21:58:14,226 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-30 21:58:14,230 - db - INFO - Trade added to DB
+2025-08-30 21:58:14,231 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-30 21:58:14,239 - db - INFO - Trade added to DB
+2025-08-30 21:58:14,239 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-30 21:59:56,648 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 21:59:56,655 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:59:58,833 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 21:59:59,154 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060ADCC2D0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 21:59:59,204 - views.signals - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 21:59:59,407 - __main__ - ERROR - Error in page Signals: 'Signal' object has no attribute 'get'
+2025-08-30 22:00:04,888 - signal_generator - ERROR - Error fetching USDT symbols from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002060A5C02D0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-30 22:08:38,570 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-30 22:08:38,593 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:08:38,593 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:08:41,739 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:09:00,583 - views.dashboard - WARNING - Invalid ticker response structure on attempt 1
+2025-08-30 22:09:04,015 - views.dashboard - WARNING - Invalid ticker response structure on attempt 2
+2025-08-30 22:09:07,649 - views.dashboard - WARNING - Invalid ticker response structure on attempt 3
+2025-08-30 22:09:08,651 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-30 22:09:17,908 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:09:17,909 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:09:18,516 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:09:31,493 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:09:31,591 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:09:32,225 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:09:40,735 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:09:40,737 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:09:41,374 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:09:44,490 - views.signals - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-30 22:11:12,695 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-30 22:11:12,696 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-30 22:11:13,016 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-30 22:11:14,480 - views.signals - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'

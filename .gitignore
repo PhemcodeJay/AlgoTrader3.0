@@ -1,9 +1,6 @@
 .env
 pyproject.toml
-app.log
-positions.log
 .gitignore
 __pycache__
 views/__pycache__
-bybit_client.log
 app.log
