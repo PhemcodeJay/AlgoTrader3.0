@@ -353,3 +353,93 @@ For more information refer to the [docs](https://docs.streamlit.io/develop/api-r
 2025-08-30 23:07:48,467 - views.dashboard - WARNING - Invalid ticker response structure on attempt 2
 2025-08-30 23:07:54,960 - views.dashboard - WARNING - Invalid ticker response structure on attempt 3
 2025-08-30 23:07:55,961 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 00:54:15,640 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 00:54:15,931 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 00:54:15,931 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:54:15,933 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:54:17,491 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 00:54:23,541 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 00:54:26,720 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 00:54:30,049 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 00:54:32,070 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 00:54:35,331 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:54:35,337 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:54:35,636 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 00:54:44,772 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:54:44,777 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:54:45,067 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 00:57:34,855 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 00:57:34,928 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 00:57:34,929 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:57:34,929 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:57:36,060 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 00:57:37,859 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 00:57:41,120 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 00:57:44,903 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 00:57:46,931 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 00:57:53,171 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 00:57:53,171 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:57:53,177 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:57:53,760 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 00:57:54,950 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 00:57:58,092 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 00:58:01,233 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 00:58:03,234 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 00:58:03,361 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:58:03,361 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:58:03,920 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 00:58:12,436 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 00:58:12,477 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 00:58:13,166 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:04:13,916 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 01:04:13,947 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 01:04:13,966 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:04:13,967 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:04:14,652 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:04:19,323 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 01:04:22,789 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 01:04:26,029 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 01:04:28,031 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 01:04:30,398 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:04:30,479 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:04:31,240 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:04:38,549 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:04:38,763 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:04:39,092 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:04:45,701 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 01:04:45,947 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:04:46,174 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:04:46,553 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:04:49,552 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 01:04:51,673 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:04:51,673 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:04:52,267 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:05:02,064 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 01:10:56,621 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 01:10:56,737 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 01:10:56,817 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:10:56,852 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:10:58,835 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:11:01,535 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 01:11:04,450 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 01:11:07,589 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 01:11:09,591 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 01:11:11,766 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:11:11,870 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:11:12,504 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:11:21,353 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:11:21,354 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:11:22,249 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:11:28,651 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 01:11:28,732 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:11:28,736 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:11:29,369 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:11:31,236 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 01:11:38,492 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 01:11:38,522 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 01:11:39,198 - bybit_client - INFO -  Connected to Bybit Mainnet
+2025-08-31 01:11:40,848 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).

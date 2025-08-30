@@ -61,12 +61,7 @@ def get_ticker_snapshot_safe(client: BybitClient, max_retries: int = 3) -> List[
             time.sleep(2)
     logger.warning("All retries failed, returning default ticker data")
     default_tickers = [
-        {"symbol": "BTCUSDT", "lastPrice": 100000.0, "priceChangePercent": 0.0},
-        {"symbol": "ETHUSDT", "lastPrice": 4500.0, "priceChangePercent": 0.0},
-        {"symbol": "XRPUSDT", "lastPrice": 1.6, "priceChangePercent": 0.0},
-        {"symbol": "BNBUSDT", "lastPrice": 700.0, "priceChangePercent": 0.0},
-        {"symbol": "DOGEUSDT", "lastPrice": 0.21, "priceChangePercent": 0.0},
-        {"symbol": "SOLUSDT", "lastPrice": 200.0, "priceChangePercent": 0.0}
+        
     ]
     for ticker in default_tickers:
         try:
@@ -124,7 +119,19 @@ def get_portfolio_balance(db, client: BybitClient, is_virtual: bool = True) -> D
 def get_current_price_safe(symbol: str, client: BybitClient) -> float:
     """Safe wrapper for getting current price"""
     try:
-        return client.get_current_price(symbol)
+        base_url = f"https://api{'-testnet' if client.testnet else ''}.bybit.com"
+        url = f"{base_url}/v5/market/tickers?category=linear&symbol={symbol}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+        }
+        if client and hasattr(client, 'get_current_price') and client.is_connected():
+            return client.get_current_price(symbol)
+        else:
+            response = requests.get(url, headers=headers).json()
+            if response.get("ret_code") == 0:
+                ticker = response.get("result", {}).get("list", [{}])[0]
+                return float(ticker.get("lastPrice", 0))
+        return 0.0
     except Exception as e:
         logger.error(f"Error getting price for {symbol}: {e}")
         return 0.0
@@ -148,7 +155,7 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
         }
         .stTabs [data-baseweb="tab"] {
             color: #a0a0c0;
-            font-weight: 500;
+            font-weight: 400;
             border-radius: 8px;
             margin: 5px;
             padding: 10px 20px;
@@ -157,7 +164,7 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
             background: linear-gradient(45deg, #6366f1, #a855f7);
             color: #ffffff;
-            font-weight: 600;
+            font-weight: 400;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .stTabs [data-baseweb="tab"]:hover {
@@ -223,11 +230,11 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
             trades = get_trades_safe(db)
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Portfolio Balance", f"${format_currency_safe(total_balance)}")
+                st.metric("Portfolio Balance", f"{format_currency_safe(total_balance)}")
             with col2:
                 st.metric("Open Positions", open_positions)
             with col3:
-                st.metric("Daily P&L", f"${format_currency_safe(daily_pnl)}", 
+                st.metric("Daily P&L", f"{format_currency_safe(daily_pnl)}", 
                          delta=f"{daily_pnl:+.2f}", 
                          delta_color="normal" if daily_pnl >= 0 else "inverse")
             with col4:
@@ -253,13 +260,13 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
                             delta_color = "normal" if change_pct >= 0 else "inverse"
                             st.metric(
                                 label=symbol.replace('USDT', ''),
-                                value=f"${format_price_safe(price)}",
+                                value=format_currency_safe(price),  # Changed to format_currency_safe
                                 delta=f"{change_pct:+.2f}%",
                                 delta_color=delta_color
                             )
                         except (ValueError, TypeError) as e:
                             logger.error(f"Error formatting market data for {symbol}: {e}")
-                            st.metric(symbol.replace('USDT', ''), f"${format_price_safe(price)}")
+                            st.metric(symbol.replace('USDT', ''), format_currency_safe(price))  # Changed to format_currency_safe
             if st.button("🔄 Refresh Market Data", key="market_refresh_data"):
                 st.rerun()
         else:
@@ -271,7 +278,6 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
         display_trades_table(get_trades_safe(db), st)
         if st.button("🔄 Refresh Trades", key="trades_refresh_data"):
             st.rerun()
-
 # Initialize components
 db = db_manager
 engine = TradingEngine()

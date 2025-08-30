@@ -81,7 +81,7 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
         }
         .stTabs [data-baseweb="tab"] {
             color: #a0a0c0;
-            font-weight: 500;
+            font-weight: 400;
             border-radius: 8px;
             margin: 5px;
             padding: 10px 20px;
@@ -90,7 +90,7 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
             background: linear-gradient(45deg, #6366f1, #a855f7);
             color: #ffffff;
-            font-weight: 600;
+            font-weight: 400;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .stTabs [data-baseweb="tab"]:hover {
