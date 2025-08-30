@@ -6,6 +6,7 @@ from typing import List, Optional
 from bybit_client import BybitClient
 from engine import TradingEngine
 from db import db_manager
+from utils import format_price_safe, format_currency_safe
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
@@ -16,12 +17,6 @@ def get_current_price_safe(symbol: str, client: BybitClient) -> float:
     except Exception as e:
         logger.error(f"Error getting price for {symbol}: {e}")
         return 0.0
-
-def format_price_safe(value: Optional[float]) -> str:
-    return f"{value:.2f}" if value is not None and value > 0 else "N/A"
-
-def format_currency_safe(value: Optional[float]) -> str:
-    return f"{value:.2f}" if value is not None else "0.00"
 
 def get_trades_safe(db, limit: int = 50) -> List:
     try:
@@ -127,6 +122,13 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
             border-radius: 8px;
             padding: 10px;
             margin: 5px 0;
+            overflow: hidden;
+        }
+        .stMetric > div {
+            font-size: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .stSelectbox, .stNumberInput {
             background: #3b3b5e;
@@ -146,8 +148,9 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
         if not is_virtual and client.is_connected():
             with st.spinner("Fetching real-time orders from Bybit..."):
                 orders = client.get_open_orders() or []
+                logger.info(f"Real orders fetched: {orders}")
                 if orders:
-                    for order in orders:
+                    for index, order in enumerate(orders):
                         with st.container(border=True):
                             symbol = order.get('symbol', 'N/A')
                             side = order.get('side', 'N/A')
@@ -166,20 +169,26 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
                                          delta=f"{unreal_pnl:+.2f}", 
                                          delta_color="normal" if unreal_pnl >= 0 else "inverse")
                             with col3:
-                                if st.button("❌ Close", key=f"close_real_order_{order.get('orderId')}"):
-                                    result = client.close_position(symbol=symbol, side=side, qty=qty)
-                                    if result:
-                                        st.success(f"✅ Order closed")
-                                        st.rerun()
-                                    else:
-                                        st.error("🚨 Failed to close order")
+                                order_id = order.get('orderId', None)
+                                if order_id:
+                                    if st.button("❌ Close", key=f"close_real_order_{order_id}_{index}"):
+                                        logger.info(f"Attempting to close real order: {order_id}, symbol={symbol}, side={side}, qty={qty}")
+                                        result = client.close_position(symbol=symbol, side=side, qty=qty)
+                                        if result:
+                                            st.success(f"✅ Order {order_id} closed")
+                                            st.rerun()
+                                        else:
+                                            st.error(f"🚨 Failed to close order {order_id}: Check logs for details")
+                                else:
+                                    st.error("🚨 Missing order ID")
                 else:
                     st.info("🌙 No open orders on Bybit")
         else:
             open_trades = get_trades_safe(db)
             filtered_trades = [t for t in open_trades if getattr(t, 'status', '').lower() == 'open' and getattr(t, 'virtual', True) == is_virtual]
+            logger.info(f"Virtual open trades: {filtered_trades}")
             if filtered_trades:
-                for trade in filtered_trades:
+                for index, trade in enumerate(filtered_trades):
                     with st.container(border=True):
                         symbol = getattr(trade, 'symbol', 'N/A')
                         side = getattr(trade, 'side', 'N/A')
@@ -198,18 +207,20 @@ def show_orders(db, engine, client, trading_mode: str = "virtual"):
                                      delta=f"{unreal_pnl:+.2f}", 
                                      delta_color="normal" if unreal_pnl >= 0 else "inverse")
                         with col3:
-                            if st.button("❌ Close", key=f"close_order_{getattr(trade, 'order_id', id(trade))}"):
-                                order_id = getattr(trade, 'order_id', None)
-                                if order_id:
+                            order_id = getattr(trade, 'order_id', None)
+                            if order_id:
+                                if st.button("❌ Close", key=f"close_order_{order_id}_{index}"):
+                                    logger.info(f"Attempting to close virtual order: {order_id}, symbol={symbol}, side={side}, qty={qty}")
                                     result = client.close_position(symbol=symbol, side=side, qty=qty)
                                     if result:
+                                        logger.info(f"Updating trade in DB: order_id={order_id}, exit_price={current_price}, pnl={unreal_pnl}")
                                         db.close_trade(order_id=order_id, exit_price=current_price, pnl=unreal_pnl)
-                                        st.success(f"✅ Order closed")
+                                        st.success(f"✅ Order {order_id} closed")
                                         st.rerun()
                                     else:
-                                        st.error("🚨 Failed to close order")
-                                else:
-                                    st.error("🚨 Missing order ID")
+                                        st.error(f"🚨 Failed to close order {order_id}: Check logs for details")
+                            else:
+                                st.error("🚨 Missing order ID")
             else:
                 st.info("🌙 No open orders")
         if st.button("🔄 Refresh Orders", key="refresh_open_orders"):
