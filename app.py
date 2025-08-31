@@ -7,15 +7,15 @@ from typing import Dict, Any, Optional
 import json
 from dotenv import load_dotenv
 
-# Views
-from views.dashboard import show_dashboard
-from views.positions import show_positions
-from views.orders import show_orders
-from views.signals import show_signals
-from views.portfolio import show_portfolio
-from views.automation import show_automation
-from views.logs import show_logs
-from views.ml import show_ml
+# Pages
+from pages.dashboard import show_dashboard
+from pages.positions import show_positions
+from pages.orders import show_orders
+from pages.signals import show_signals
+from pages.portfolio import show_portfolio
+from pages.automation import show_automation
+from pages.logs import show_logs
+from pages.ml import show_ml
 
 # Move set_page_config to the top
 st.set_page_config(
