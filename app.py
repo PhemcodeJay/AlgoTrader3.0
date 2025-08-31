@@ -111,56 +111,6 @@ CSS = """
     }
     </style>
 """
-
-# Initialize components safely
-@st.cache_resource
-def init_components():
-    """Initialize database and trading components with error handling"""
-    try:
-        from db import db_manager, init_db
-        from engine import TradingEngine
-        from bybit_client import BybitClient
-        from automated_trader import AutomatedTrader
-
-        database_url = os.getenv("DATABASE_URL", "sqlite:///trading.db")
-        try:
-            init_db()
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-            st.warning("⚠️ Database initialization failed, continuing with limited functionality")
-
-        db_manager_instance = db_manager
-        engine = TradingEngine()
-        client = BybitClient()
-        automated_trader = AutomatedTrader(engine)
-
-        return db_manager_instance, engine, client, automated_trader
-
-    except ImportError as e:
-        logger.error(f"Failed to import modules: {e}")
-        st.error(f"🚨 Failed to import modules: {e}")
-        return None, None, None, None
-    except Exception as e:
-        logger.error(f"Failed to initialize components: {e}")
-        st.error(f"🚨 Failed to initialize components: {e}")
-        return None, None, None, None
-
-# Initialize session state
-def init_session_state():
-    """Initialize session state variables"""
-    defaults = {
-        'trading_mode': 'virtual',
-        'selected_symbol': 'BTCUSDT',
-        'position_size': 0.01,
-        'leverage': 10,  # Matches signals.py
-        'log_level': 'INFO',
-        'last_refresh': datetime.now().timestamp()
-    }
-
-    for key, default_value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = default_value
-
 def main():
     """Main application function"""
     try:
@@ -305,6 +255,55 @@ def main():
     except Exception as e:
         logger.error(f"Critical error in main: {e}")
         st.error(f"🚨 Critical application error: {str(e)}")
+
+# Initialize components safely
+@st.cache_resource
+def init_components():
+    """Initialize database and trading components with error handling"""
+    try:
+        from db import db_manager, init_db
+        from engine import TradingEngine
+        from bybit_client import BybitClient
+        from automated_trader import AutomatedTrader
+
+        database_url = os.getenv("DATABASE_URL", "sqlite:///trading.db")
+        try:
+            init_db()
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {e}")
+            st.warning("⚠️ Database initialization failed, continuing with limited functionality")
+
+        db_manager_instance = db_manager
+        engine = TradingEngine()
+        client = BybitClient()
+        automated_trader = AutomatedTrader(engine)
+
+        return db_manager_instance, engine, client, automated_trader
+
+    except ImportError as e:
+        logger.error(f"Failed to import modules: {e}")
+        st.error(f"🚨 Failed to import modules: {e}")
+        return None, None, None, None
+    except Exception as e:
+        logger.error(f"Failed to initialize components: {e}")
+        st.error(f"🚨 Failed to initialize components: {e}")
+        return None, None, None, None
+
+# Initialize session state
+def init_session_state():
+    """Initialize session state variables"""
+    defaults = {
+        'trading_mode': 'virtual',
+        'selected_symbol': 'BTCUSDT',
+        'position_size': 0.01,
+        'leverage': 10,  # Matches signals.py
+        'log_level': 'INFO',
+        'last_refresh': datetime.now().timestamp()
+    }
+
+    for key, default_value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_value
 
 if __name__ == "__main__":
     main()

@@ -154,7 +154,7 @@ def generate_signals(symbols, interval="60"):
 # === MAIN FUNCTION ===
 def main(symbols=None, interval="60"):
     symbols = symbols or get_usdt_symbols()
-    print("\n🔍 Scanning Bybit USDT Futures for filtered signals...\n")
+    print("\n Scanning Bybit USDT Futures for filtered signals...\n")
     signals = generate_signals(symbols, interval)
     
     if signals:

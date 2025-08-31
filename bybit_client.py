@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import math
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Dict, Optional, List, Any, TYPE_CHECKING
 import json
 import uuid
@@ -15,8 +15,8 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log', encoding='utf-8'),  # Explicit UTF-8 for file
-        logging.StreamHandler()  # Console handler
+        logging.FileHandler('app.log', encoding='utf-8'),
+        logging.StreamHandler()
     ]
 )
 
@@ -92,45 +92,43 @@ def safe_float(value, default=0.0):
         return default
 
 def sanitize_message(message: str) -> str:
-    """Replace problematic Unicode characters in error messages."""
     return message.encode('ascii', errors='replace').decode('ascii')
 
 class BybitClient:
-    """Bybit client with real mode (pybit) and enhanced virtual mode with trade tracking + PnL simulation."""
+    """Bybit client with real mode (mainnet API) and virtual mode (capital.json)."""
     def __init__(self):
-        self.testnet = os.getenv("BYBIT_TESTNET", "true").lower() == "true"
         self.account_type = os.getenv("BYBIT_ACCOUNT_TYPE", "UNIFIED").upper()
         self.session = self._connect()
-        key_env = "BYBIT_TESTNET_API_KEY" if self.testnet else "BYBIT_API_KEY"
-        secret_env = "BYBIT_TESTNET_API_SECRET" if self.testnet else "BYBIT_API_SECRET"
-        self.api_key = (os.getenv(key_env) or "").strip()
-        self.api_secret = (os.getenv(secret_env) or "").strip()
+        self.api_key = (os.getenv("BYBIT_API_KEY") or "").strip()
+        self.api_secret = (os.getenv("BYBIT_API_SECRET") or "").strip()
         self.client: Optional[HTTPClient] = None
         self.use_real = False
 
+        # Real mode (mainnet only)
         if PYBIT_AVAILABLE and self.api_key and self.api_secret:
             try:
                 self.client = HTTPClient(
-                    testnet=self.testnet,
+                    testnet=False,
                     api_key=self.api_key,
                     api_secret=self.api_secret,
                 )
                 response = self.client.get_server_time()
                 if isinstance(response, dict) and response.get("retCode") == 0:
-                    logger.info(f"Connected to Bybit {'Testnet' if self.testnet else 'Mainnet'}")
+                    logger.info("✅ Connected to Bybit Mainnet (Real Trading)")
                     self.use_real = True
                 else:
                     msg = response.get("retMsg") if isinstance(response, dict) else "Invalid response"
-                    logger.error(f"❌ Failed to authenticate: {sanitize_message(msg)}")
+                    logger.error(f"❌ Failed to authenticate on mainnet: {sanitize_message(msg)}")
                     self.client = None
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Bybit client: {sanitize_message(str(e))}")
                 self.client = None
         else:
-            logger.warning("⚠️ No API credentials or pybit not available, running in virtual mode")
+            logger.warning("⚠️ No API credentials → running in VIRTUAL mode using capital.json")
 
         self._ensure_virtual_storage()
 
+    # --- Virtual storage helpers ---
     def _ensure_virtual_storage(self):
         default_capital = {"virtual": {"capital": 100.0, "available": 100.0, "used": 0.0, "currency": "USDT"}}
         capital_data = _load_json_file(CAPITAL_FILE, default_capital)
@@ -507,6 +505,8 @@ class BybitClient:
 
     def get_positions(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
         self.monitor_sl_tp()
+
+        # Handle virtual trading mode
         if not self.client:
             trades = self._read_virtual_trades()
             open_trades = [t for t in trades if t.get("status") == "Open"]
@@ -527,23 +527,32 @@ class BybitClient:
                     "currentPrice": current_price,
                     "stopLoss": t.get("stopLoss"),
                     "takeProfit": t.get("takeProfit"),
-                    "leverage": t.get("leverage", 10)
+                    "leverage": t.get("leverage", 10),
                 }
                 positions.append(pos)
             return positions
+
+        # Handle real trading mode
         try:
             params = {"category": "linear"}
-            if symbol is not None:
+            if symbol:
                 params["symbol"] = symbol
+            else:
+                # ✅ Bybit requires either symbol or settleCoin
+                params["settleCoin"] = "USDT"
+
             response = self.client.get_positions(**params)
             if isinstance(response, dict) and response.get("retCode") == 0:
                 return response.get("result", {}).get("list", [])
             else:
-                logger.error(f"Positions error: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}")
+                logger.error(
+                    f"Positions error: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}"
+                )
                 return []
         except Exception as e:
             logger.error(f"Error getting positions: {sanitize_message(str(e))}")
             return []
+
 
     def close_position(self, symbol: str, side: str, qty: Optional[str] = None) -> Optional[Dict[str, Any]]:
         side = "Buy" if side.upper() == "LONG" else "Sell" if side.upper() == "SHORT" else side
@@ -850,4 +859,34 @@ class BybitClient:
             return []
         except Exception as e:
             logger.error(f"Error getting tickers: {sanitize_message(str(e))}")
+            return []
+        
+    def get_open_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+        # Virtual trading mode
+        if not self.client:
+            trades = self._read_virtual_trades()
+            open_orders = [t for t in trades if t.get("status") == "Pending"]
+            if symbol:
+                open_orders = [t for t in open_orders if t.get("symbol") == symbol]
+            return open_orders
+
+        # Real trading mode
+        try:
+            params = {"category": "linear"}
+            if symbol:
+                params["symbol"] = symbol
+            else:
+                # ✅ Bybit requires either symbol or settleCoin
+                params["settleCoin"] = "USDT"
+
+            response = self.client.get_open_orders(**params)
+            if isinstance(response, dict) and response.get("retCode") == 0:
+                return response.get("result", {}).get("list", [])
+            else:
+                logger.error(
+                    f"Open orders error: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}"
+                )
+                return []
+        except Exception as e:
+            logger.error(f"Error getting open orders: {sanitize_message(str(e))}")
             return []

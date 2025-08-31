@@ -312,3 +312,205 @@ DETAIL:  Failing row contains (15, DOGEUSDT, Buy, 75, 0.2, null, null, null, 10,
 2025-08-31 11:28:00,155 - settings - INFO - Successfully loaded settings from settings.json
 2025-08-31 11:28:00,156 - engine - INFO - [Engine] Initializing TradingEngine...
 2025-08-31 11:28:00,156 - bybit_client - WARNING - ⚠️ No API credentials or pybit not available, running in virtual mode
+2025-08-31 11:45:06,306 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:45:06,420 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:45:06,494 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:45:10,825 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:45:23,871 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 11:45:28,420 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 11:45:34,802 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 11:45:36,803 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 11:45:36,854 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:45:37,573 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:45:40,247 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:45:40,996 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:45:41,245 - views.orders - INFO - Virtual open trades: []
+2025-08-31 11:45:41,404 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:45:41,448 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:45:42,095 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:45:42,275 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 11:45:42,402 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:45:43,569 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:47:34,248 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 11:48:37,828 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:48:38,774 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:48:39,479 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:48:42,306 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 11:48:45,901 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 11:48:49,834 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 11:48:51,835 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 11:49:06,923 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 11:49:10,540 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 11:49:13,725 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 11:49:15,726 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 11:49:27,887 - bybit_client - ERROR - Error getting positions: Missing some parameters that must be filled in, symbol or settleCoin (ErrCode: 10001) (ErrTime: 08:49:27).
+Request ? GET https://api.bybit.com/v5/position/list: category=linear.
+2025-08-31 11:49:40,810 - __main__ - ERROR - Error in page Orders: 'BybitClient' object has no attribute 'get_open_orders'
+2025-08-31 11:58:20,466 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:58:20,485 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:58:20,515 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:58:21,752 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:58:23,988 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 11:58:27,023 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 11:58:30,287 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 11:58:32,299 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 11:58:32,354 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:58:33,252 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:58:34,917 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:58:35,655 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:58:35,675 - views.orders - INFO - Virtual open trades: []
+2025-08-31 11:58:35,735 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:58:35,754 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:58:36,252 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:58:36,357 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 11:58:36,448 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:58:36,953 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 11:58:37,976 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 12:01:30,097 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:01:31,276 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:01:32,882 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 12:03:02,085 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 12:03:02,095 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 12:03:02,096 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:03:02,944 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:03:11,784 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 12:03:14,964 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 12:03:18,108 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 12:03:20,109 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 12:03:20,147 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:03:20,479 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:03:21,842 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:03:22,444 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:03:22,455 - views.orders - INFO - Virtual open trades: []
+2025-08-31 12:03:22,561 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 12:03:23,099 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:03:23,420 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:03:23,612 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 12:03:23,629 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:03:24,209 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:03:45,764 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 12:04:16,481 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 12:04:16,991 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:04:17,313 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 12:04:18,880 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 12:04:22,170 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 12:04:25,395 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 12:04:27,396 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 20:56:30,382 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 20:56:30,400 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 20:56:30,406 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 20:56:42,692 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/time (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E55FB9E660>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:57:15,459 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E55FBA1590>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:57:29,503 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E55FBA3250>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:57:43,724 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E55FBA3610>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:57:45,905 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 20:57:46,603 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 20:57:58,938 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/time (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E55FBA2AD0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:58:00,602 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 20:58:13,445 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/time (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E560104190>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:58:13,457 - views.orders - INFO - Virtual open trades: []
+2025-08-31 20:58:13,696 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 20:58:14,096 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 20:58:26,604 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/time (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E5601047D0>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 20:58:30,112 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 20:58:30,476 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 20:58:42,600 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/time (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E55FBA3110>: Failed to resolve 'api.bybit.com' ([Errno 11001] getaddrinfo failed)"))
+2025-08-31 21:03:53,573 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 21:03:55,557 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:04:01,083 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 21:04:01,717 - bybit_client - INFO - Connected to Bybit Mainnet
+2025-08-31 21:04:04,336 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 21:04:08,166 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 21:04:12,027 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 21:04:14,027 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 21:08:02,889 - views.orders - INFO - Virtual open trades: []
+2025-08-31 21:08:17,010 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,012 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,013 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,013 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,014 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,014 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,014 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,014 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,015 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,015 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,015 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,015 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,016 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,016 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,016 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,016 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:17,016 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,742 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,743 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,744 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,745 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,748 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,748 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,749 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,749 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,750 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,750 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,750 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,750 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,751 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,751 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,751 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,752 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:08:20,752 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,558 - views.signals - ERROR - signal_generator.py failed: Traceback (most recent call last):
+  File "C:\Users\PhemcodeJay\Documents\AlgoTrader3.0\signal_generator.py", line 188, in <module>
+    main(symbols, args.interval)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PhemcodeJay\Documents\AlgoTrader3.0\signal_generator.py", line 157, in main
+    print("\n\U0001f50d Scanning Bybit USDT Futures for filtered signals...\n")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PhemcodeJay\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d' in position 2: character maps to <undefined>
+
+2025-08-31 21:09:22,569 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,575 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,576 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,576 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,577 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,577 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,577 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,578 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,578 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,579 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,579 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,579 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,579 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,580 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,580 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,580 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,580 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,598 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,604 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,605 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,605 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,605 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,606 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,606 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,609 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,611 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,627 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,628 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,629 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,629 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,630 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,631 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,637 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:09:22,646 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
