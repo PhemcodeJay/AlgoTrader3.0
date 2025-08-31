@@ -58,3 +58,253 @@ Request ? GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountTy
 2025-08-31 09:51:05,461 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
 2025-08-31 09:51:08,619 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
 2025-08-31 09:51:10,620 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 10:03:09,892 - pybit._http_manager - ERROR - invalid request, please check your server timestamp or recv_window param. req_timestamp[1756623773500],server_timestamp[1756623787344],recv_window[5000] (ErrCode: 10002). Added 2.5 seconds to recv_window. 2 retries remain.
+2025-08-31 10:03:09,972 - bybit_client - ERROR - Exception getting wallet balance: API key is invalid. (ErrCode: 10003) (ErrTime: 07:03:09).
+Request ? GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED.
+2025-08-31 10:03:14,600 - bybit_client - ERROR - Exception getting wallet balance: API key is invalid. (ErrCode: 10003) (ErrTime: 07:03:14).
+Request ? GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED.
+2025-08-31 10:04:43,866 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 10:04:48,454 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 10:04:51,264 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 10:04:53,266 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 10:06:40,051 - bybit_client - ERROR - Exception getting wallet balance: API key is invalid. (ErrCode: 10003) (ErrTime: 07:06:40).
+Request ? GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED.
+2025-08-31 10:07:25,686 - bybit_client - ERROR - Exception getting wallet balance: API key is invalid. (ErrCode: 10003) (ErrTime: 07:07:25).
+Request ? GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED.
+2025-08-31 10:07:26,356 - automated_trader - INFO - Trading loop started
+2025-08-31 10:07:26,356 - automated_trader - INFO - Automated trading system started
+2025-08-31 10:07:26,357 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 10:07:31,067 - bybit_client - ERROR - Exception getting wallet balance: API key is invalid. (ErrCode: 10003) (ErrTime: 07:07:31).
+Request ? GET https://api-testnet.bybit.com/v5/account/wallet-balance: accountType=UNIFIED.
+2025-08-31 10:07:34,648 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:07:42,585 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:07:43,198 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:07:44,014 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:07:44,658 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:07:45,911 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:07:46,813 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:07:47,418 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:07:48,039 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:07:49,254 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:07:50,093 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:07:50,730 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:07:51,309 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:07:51,942 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:07:52,544 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:08:03,787 - db - INFO - Signal added to DB
+2025-08-31 10:08:04,640 - db - INFO - Signal added to DB
+2025-08-31 10:08:05,121 - db - INFO - Signal added to DB
+2025-08-31 10:08:05,145 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 10:08:05,363 - bybit_client - ERROR - Qty 1.875e-05 out of range for BTCUSDT: min=0.001, max=1190.0
+2025-08-31 10:08:05,480 - bybit_client - ERROR - Order validation failed for BTCUSDT: Qty out of range: min=0.001, max=1190.0
+2025-08-31 10:08:06,711 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (1, BTCUSDT, Buy, 1.875e-05, 800000, null, null, null, 10, 15, null, 2025-08-31 07:08:05.481297, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'BTCUSDT', 'side': 'Buy', 'qty': 1.875e-05, 'entry_price': 800000.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:08:05.481297+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:08:07,555 - bybit_client - ERROR - Qty 0.0005895779133108219 out of range for ETHUSDT: min=0.01, max=7240.0
+2025-08-31 10:08:07,555 - bybit_client - ERROR - Order validation failed for ETHUSDT: Qty out of range: min=0.01, max=7240.0
+2025-08-31 10:08:07,650 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (2, ETHUSDT, Buy, 0.0005895779133108219, 25441.93, null, null, null, 10, 15, null, 2025-08-31 07:08:07.555822, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'ETHUSDT', 'side': 'Buy', 'qty': 0.0005895779133108219, 'entry_price': 25441.93, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:08:07.555822+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:08:07,839 - bybit_client - WARNING - Adjusted qty for DOGEUSDT from 56.84186592898556 to 56.0 to match qtyStep=1.0
+2025-08-31 10:08:07,840 - bybit_client - WARNING - Adjusted stop_loss for DOGEUSDT from 0.25993165 to 0.25993
+2025-08-31 10:08:07,840 - bybit_client - WARNING - Adjusted take_profit for DOGEUSDT from 0.27048725 to 0.27049
+2025-08-31 10:08:08,161 - bybit_client - ERROR - Error placing order: API key is invalid. (ErrCode: 10003) (ErrTime: 07:08:08).
+Request ? POST https://api-testnet.bybit.com/v5/order/create: {"category": "linear", "symbol": "DOGEUSDT", "side": "Buy", "orderType": "Market", "qty": "56.0", "timeInForce": "GTC", "stopLoss": "0.25993", "takeProfit": "0.27049"}.
+2025-08-31 10:08:08,192 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (3, DOGEUSDT, Buy, 56.84186592898556, 0.26389, null, null, null, 10, 15, null, 2025-08-31 07:08:08.161679, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'DOGEUSDT', 'side': 'Buy', 'qty': 56.84186592898556, 'entry_price': 0.26389, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:08:08.161679+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:09:08,223 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 10:09:09,361 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 10:09:10,282 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:09:11,130 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:09:11,794 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:09:12,535 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:09:13,142 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:09:14,167 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:09:14,910 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:09:15,694 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:09:16,286 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:09:16,954 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:09:17,542 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:09:18,403 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:09:19,081 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:09:19,896 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:09:20,519 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:09:21,254 - db - INFO - Signal added to DB
+2025-08-31 10:09:21,912 - db - INFO - Signal added to DB
+2025-08-31 10:09:22,469 - db - INFO - Signal added to DB
+2025-08-31 10:09:22,548 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 10:09:22,913 - bybit_client - ERROR - Qty 1.875e-05 out of range for BTCUSDT: min=0.001, max=1190.0
+2025-08-31 10:09:22,913 - bybit_client - ERROR - Order validation failed for BTCUSDT: Qty out of range: min=0.001, max=1190.0
+2025-08-31 10:09:23,073 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (4, BTCUSDT, Buy, 1.875e-05, 800000, null, null, null, 10, 15, null, 2025-08-31 07:09:22.914094, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'BTCUSDT', 'side': 'Buy', 'qty': 1.875e-05, 'entry_price': 800000.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:09:22.914094+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:09:23,676 - bybit_client - ERROR - Qty 0.0005729496709550039 out of range for ETHUSDT: min=0.01, max=7240.0
+2025-08-31 10:09:23,709 - bybit_client - ERROR - Order validation failed for ETHUSDT: Qty out of range: min=0.01, max=7240.0
+2025-08-31 10:09:23,784 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (5, ETHUSDT, Buy, 0.0005729496709550039, 26180.31, null, null, null, 10, 15, null, 2025-08-31 07:09:23.777365, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'ETHUSDT', 'side': 'Buy', 'qty': 0.0005729496709550039, 'entry_price': 26180.31, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:09:23.777365+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:09:24,454 - bybit_client - WARNING - Adjusted qty for DOGEUSDT from 56.84186592898556 to 56.0 to match qtyStep=1.0
+2025-08-31 10:09:24,455 - bybit_client - WARNING - Adjusted stop_loss for DOGEUSDT from 0.25993165 to 0.25993
+2025-08-31 10:09:24,509 - bybit_client - WARNING - Adjusted take_profit for DOGEUSDT from 0.27048725 to 0.27049
+2025-08-31 10:09:24,933 - bybit_client - ERROR - Error placing order: API key is invalid. (ErrCode: 10003) (ErrTime: 07:09:24).
+Request ? POST https://api-testnet.bybit.com/v5/order/create: {"category": "linear", "symbol": "DOGEUSDT", "side": "Buy", "orderType": "Market", "qty": "56.0", "timeInForce": "GTC", "stopLoss": "0.25993", "takeProfit": "0.27049"}.
+2025-08-31 10:09:24,984 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (6, DOGEUSDT, Buy, 56.84186592898556, 0.26389, null, null, null, 10, 15, null, 2025-08-31 07:09:24.977983, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'DOGEUSDT', 'side': 'Buy', 'qty': 56.84186592898556, 'entry_price': 0.26389, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:09:24.977983+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:10:25,059 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 10:10:26,638 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 10:10:27,280 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:10:28,406 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:10:29,426 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 10:10:30,327 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:10:30,998 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:10:31,757 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 10:10:32,386 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:10:33,162 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:10:33,871 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 10:10:34,574 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:10:35,676 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:10:36,328 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 10:10:37,180 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:10:37,806 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:10:39,068 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 10:10:39,806 - db - INFO - Signal added to DB
+2025-08-31 10:10:40,458 - db - INFO - Signal added to DB
+2025-08-31 10:10:40,957 - db - INFO - Signal added to DB
+2025-08-31 10:10:40,957 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 10:10:41,162 - bybit_client - ERROR - Qty 1.875e-05 out of range for BTCUSDT: min=0.001, max=1190.0
+2025-08-31 10:10:41,163 - bybit_client - ERROR - Order validation failed for BTCUSDT: Qty out of range: min=0.001, max=1190.0
+2025-08-31 10:10:41,167 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (7, BTCUSDT, Buy, 1.875e-05, 800000, null, null, null, 10, 15, null, 2025-08-31 07:10:41.16373, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'BTCUSDT', 'side': 'Buy', 'qty': 1.875e-05, 'entry_price': 800000.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:10:41.163730+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:10:41,670 - bybit_client - ERROR - Qty 0.0005633447354307785 out of range for ETHUSDT: min=0.01, max=7240.0
+2025-08-31 10:10:41,670 - bybit_client - ERROR - Order validation failed for ETHUSDT: Qty out of range: min=0.01, max=7240.0
+2025-08-31 10:10:41,757 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (8, ETHUSDT, Buy, 0.0005633447354307785, 26626.68, null, null, null, 10, 15, null, 2025-08-31 07:10:41.67339, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'ETHUSDT', 'side': 'Buy', 'qty': 0.0005633447354307785, 'entry_price': 26626.68, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:10:41.673390+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:10:42,248 - bybit_client - WARNING - Adjusted qty for DOGEUSDT from 56.84186592898556 to 56.0 to match qtyStep=1.0
+2025-08-31 10:10:42,256 - bybit_client - WARNING - Adjusted stop_loss for DOGEUSDT from 0.25993165 to 0.25993
+2025-08-31 10:10:42,258 - bybit_client - WARNING - Adjusted take_profit for DOGEUSDT from 0.27048725 to 0.27049
+2025-08-31 10:10:42,450 - bybit_client - ERROR - Error placing order: API key is invalid. (ErrCode: 10003) (ErrTime: 07:10:42).
+Request ? POST https://api-testnet.bybit.com/v5/order/create: {"category": "linear", "symbol": "DOGEUSDT", "side": "Buy", "orderType": "Market", "qty": "56.0", "timeInForce": "GTC", "stopLoss": "0.25993", "takeProfit": "0.27049"}.
+2025-08-31 10:10:42,453 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (9, DOGEUSDT, Buy, 56.84186592898556, 0.26389, null, null, null, 10, 15, null, 2025-08-31 07:10:42.451229, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'DOGEUSDT', 'side': 'Buy', 'qty': 56.84186592898556, 'entry_price': 0.26389, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:10:42.451229+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:11:42,753 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 10:11:48,622 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:11:48,889 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:11:57,407 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:11:57,410 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:12:02,551 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:12:02,553 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:12:07,677 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:12:07,681 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:12:13,169 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:12:13,171 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:12:23,415 - bybit_client - WARNING - Authenticated API failed for BTCUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:12:23,542 - db - INFO - Signal added to DB
+2025-08-31 10:12:33,581 - bybit_client - WARNING - Authenticated API failed for ETHUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:12:33,630 - db - INFO - Signal added to DB
+2025-08-31 10:12:43,692 - bybit_client - WARNING - Authenticated API failed for DOGEUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:12:43,773 - db - INFO - Signal added to DB
+2025-08-31 10:12:43,831 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 10:12:54,504 - bybit_client - ERROR - Error validating order params for BTCUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:12:54,691 - bybit_client - ERROR - Order validation failed for BTCUSDT: Validation error: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:12:54,694 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (10, BTCUSDT, Buy, 0.00015, 100000, null, null, null, 10, 15, null, 2025-08-31 07:12:54.691816, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'BTCUSDT', 'side': 'Buy', 'qty': 0.00015, 'entry_price': 100000.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:12:54.691816+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:13:04,860 - bybit_client - ERROR - Error validating order params for ETHUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:13:04,861 - bybit_client - ERROR - Order validation failed for ETHUSDT: Validation error: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:13:04,878 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (11, ETHUSDT, Buy, 0.0033333333333333335, 4500, null, null, null, 10, 15, null, 2025-08-31 07:13:04.861978, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'ETHUSDT', 'side': 'Buy', 'qty': 0.0033333333333333335, 'entry_price': 4500.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:13:04.861978+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:13:14,960 - bybit_client - ERROR - Error validating order params for DOGEUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:13:14,960 - bybit_client - ERROR - Order validation failed for DOGEUSDT: Validation error: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:13:14,964 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (12, DOGEUSDT, Buy, 75, 0.2, null, null, null, 10, 15, null, 2025-08-31 07:13:14.961935, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'DOGEUSDT', 'side': 'Buy', 'qty': 75.0, 'entry_price': 0.2, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:13:14.961935+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:14:15,216 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 10:14:17,155 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 10:14:22,461 - utils - ERROR - Error fetching candles for BTCUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:14:22,471 - utils - ERROR - Error generating signal for BTCUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:14:27,651 - utils - ERROR - Error fetching candles for ETHUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:14:27,651 - utils - ERROR - Error generating signal for ETHUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:14:33,026 - utils - ERROR - Error fetching candles for DOGEUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:14:33,027 - utils - ERROR - Error generating signal for DOGEUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:14:38,163 - utils - ERROR - Error fetching candles for SOLUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:14:38,163 - utils - ERROR - Error generating signal for SOLUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:14:43,371 - utils - ERROR - Error fetching candles for XRPUSDT from Bybit: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=5)
+2025-08-31 10:14:43,394 - utils - ERROR - Error generating signal for XRPUSDT: cannot access local variable 'response' where it is not associated with a value
+2025-08-31 10:14:53,536 - bybit_client - WARNING - Authenticated API failed for BTCUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:14:53,641 - db - INFO - Signal added to DB
+2025-08-31 10:15:04,157 - bybit_client - WARNING - Authenticated API failed for ETHUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:06,045 - db - INFO - Signal added to DB
+2025-08-31 10:15:16,141 - bybit_client - WARNING - Authenticated API failed for DOGEUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:16,477 - db - INFO - Signal added to DB
+2025-08-31 10:15:16,478 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 10:15:26,608 - bybit_client - ERROR - Error validating order params for BTCUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:26,608 - bybit_client - ERROR - Order validation failed for BTCUSDT: Validation error: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:26,612 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (13, BTCUSDT, Buy, 0.00015, 100000, null, null, null, 10, 15, null, 2025-08-31 07:15:26.609442, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'BTCUSDT', 'side': 'Buy', 'qty': 0.00015, 'entry_price': 100000.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:15:26.609442+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:15:36,740 - bybit_client - ERROR - Error validating order params for ETHUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:36,741 - bybit_client - ERROR - Order validation failed for ETHUSDT: Validation error: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:36,909 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (14, ETHUSDT, Buy, 0.0033333333333333335, 4500, null, null, null, 10, 15, null, 2025-08-31 07:15:36.742832, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'ETHUSDT', 'side': 'Buy', 'qty': 0.0033333333333333335, 'entry_price': 4500.0, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:15:36.742832+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 10:15:46,973 - bybit_client - ERROR - Error validating order params for DOGEUSDT: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:46,976 - bybit_client - ERROR - Order validation failed for DOGEUSDT: Validation error: HTTPSConnectionPool(host='api-testnet.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 10:15:47,043 - engine - ERROR - ❌ Error executing signal: (psycopg2.errors.NotNullViolation) null value in column "order_id" of relation "trades" violates not-null constraint
+DETAIL:  Failing row contains (15, DOGEUSDT, Buy, 75, 0.2, null, null, null, 10, 15, null, 2025-08-31 07:15:46.97791, error, null, 0, f, Fallback Demo, 0).
+
+[SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
+[parameters: {'symbol': 'DOGEUSDT', 'side': 'Buy', 'qty': 75.0, 'entry_price': 0.2, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:15:46.977910+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)

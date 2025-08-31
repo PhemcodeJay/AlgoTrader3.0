@@ -26,20 +26,28 @@ except ImportError:
     LEVERAGE = 10
 
 def get_tickers(client: BybitClient, max_retries: int = 3) -> List[dict]:
-    """Safe wrapper for getting ticker snapshot with retry logic"""
-    base_url = f"https://api{'-testnet' if client.testnet else ''}.bybit.com"
+    """Safe wrapper for getting ticker snapshot from Bybit MAINNET with retry logic"""
+    base_url = "https://api.bybit.com"  # Force MAINNET
     url = f"{base_url}/v5/market/tickers?category=linear"
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+        'User-Agent': (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/58.0.3029.110 Safari/537.36'
+        )
     }
+
     for attempt in range(max_retries):
         try:
             if client and hasattr(client, 'get_tickers') and client.is_connected():
                 response = client.get_tickers(category="linear")
             else:
                 response = requests.get(url, headers=headers).json()
+
             logger.debug(f"Ticker API response: {response}")
-            if isinstance(response, dict) and response.get("ret_code") == 0:
+
+            # Bybit mainnet unified API uses `retCode` not `ret_code`
+            if isinstance(response, dict) and response.get("retCode") == 0:
                 tickers = [
                     {
                         "symbol": ticker.get("symbol", "N/A"),
@@ -47,28 +55,37 @@ def get_tickers(client: BybitClient, max_retries: int = 3) -> List[dict]:
                         "priceChangePercent": float(ticker.get("price24hPcnt", '0')) * 100
                     }
                     for ticker in response.get("result", {}).get("list", [])
-                    if ticker.get("symbol", "").endswith("USDT") and 
-                       ticker.get("symbol", "") not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]
+                    if ticker.get("symbol", "").endswith("USDT")
+                    and ticker.get("symbol", "") not in [
+                        "1000000BABYDOGEUSDT",
+                        "1000000CHEEMSUSDT",
+                        "1000000MOGUSDT",
+                    ]
                 ]
                 return sorted(tickers, key=lambda x: x.get("lastPrice", 0), reverse=True)[:6]
-            logger.warning(f"Invalid ticker response structure on attempt {attempt + 1}: {response.get('ret_msg', 'No error message')}")
+
+            logger.warning(
+                f"Invalid ticker response on attempt {attempt + 1}: "
+                f"{response.get('retMsg', 'No error message')}"
+            )
             time.sleep(2)
+
         except AttributeError as e:
             logger.error(f"BybitClient method error on attempt {attempt + 1}: {e}")
             time.sleep(2)
         except Exception as e:
             logger.error(f"Error getting ticker snapshot on attempt {attempt + 1}: {e}")
             time.sleep(2)
+
     logger.warning("All retries failed, returning default ticker data")
-    default_tickers = [
-        
-    ]
+    default_tickers = []
     for ticker in default_tickers:
         try:
             ticker["lastPrice"] = get_current_price_safe(ticker["symbol"], client)
         except Exception:
             pass
     return default_tickers[:6]
+
 
 def get_portfolio_balance(db, client: BybitClient, is_virtual: bool = True) -> Dict:
     """Calculate portfolio balance and unrealized P&L"""
@@ -116,22 +133,32 @@ def get_portfolio_balance(db, client: BybitClient, is_virtual: bool = True) -> D
             "open_positions": 0
         }
 
-def get_current_price_safe(symbol: str, client: BybitClient) -> float:
-    """Safe wrapper for getting current price"""
+def get_current_price_safe(symbol: str, client: Optional["BybitClient"] = None) -> float:
+    """Safe wrapper for getting current price from Bybit MAINNET"""
     try:
-        base_url = f"https://api{'-testnet' if client.testnet else ''}.bybit.com"
+        base_url = "https://api.bybit.com"  # Force MAINNET
         url = f"{base_url}/v5/market/tickers?category=linear&symbol={symbol}"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+            'User-Agent': (
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/58.0.3029.110 Safari/537.36'
+            )
         }
-        if client and hasattr(client, 'get_current_price') and client.is_connected():
-            return client.get_current_price(symbol)
-        else:
-            response = requests.get(url, headers=headers).json()
-            if response.get("ret_code") == 0:
-                ticker = response.get("result", {}).get("list", [{}])[0]
-                return float(ticker.get("lastPrice", 0))
+
+        # Prefer BybitClient if available
+        if client and hasattr(client, "get_current_price") and client.is_connected():
+            return float(client.get_current_price(symbol))
+
+        # Otherwise fallback to REST
+        response = requests.get(url, headers=headers, timeout=10).json()
+        if isinstance(response, dict) and response.get("retCode") == 0:
+            ticker = response.get("result", {}).get("list", [{}])[0]
+            return float(ticker.get("lastPrice", 0))
+
+        logger.warning(f"Invalid price response for {symbol}: {response}")
         return 0.0
+
     except Exception as e:
         logger.error(f"Error getting price for {symbol}: {e}")
         return 0.0
