@@ -16,6 +16,14 @@ from views.automation import show_automation
 from views.logs import show_logs
 from views.ml import show_ml
 
+# Move set_page_config to the top
+st.set_page_config(
+    page_title="AlgoTrader Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Configure logging (single configuration)
 logging.basicConfig(
     level=logging.INFO,
@@ -111,17 +119,10 @@ CSS = """
     }
     </style>
 """
+
 def main():
     """Main application function"""
     try:
-        # Page configuration (must be first Streamlit command)
-        st.set_page_config(
-            page_title="AlgoTrader Dashboard",
-            page_icon="📈",
-            layout="wide",
-            initial_sidebar_state="expanded"
-        )
-
         # Apply custom CSS
         st.markdown(CSS, unsafe_allow_html=True)
 

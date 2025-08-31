@@ -586,3 +586,6 @@ For more information refer to the [docs](https://docs.streamlit.io/develop/api-r
 2025-08-31 21:41:47,845 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
 2025-08-31 21:41:47,913 - engine - INFO - [Engine] Initializing TradingEngine...
 2025-08-31 21:41:48,244 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:41:49,960 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
