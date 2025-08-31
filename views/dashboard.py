@@ -280,30 +280,35 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
         st.subheader("🌐 Market Overview")
         with st.spinner("Fetching market data..."):
             market_data = get_tickers(client)
+
         if market_data:
             cols = st.columns(min(6, len(market_data)))
             for i, ticker in enumerate(market_data[:6]):
+                # ✅ normalize keys with defaults
+                symbol = ticker.get("symbol", "N/A")
+                price = ticker.get("lastPrice") or 0
+                change = ticker.get("priceChangePercent") or 0
+
                 with cols[i]:
                     with st.container(border=True):
-                        symbol = ticker.get('symbol', 'N/A')
-                        price = ticker.get('lastPrice', 0)
-                        change = ticker.get('priceChangePercent', 0)
                         try:
                             change_pct = float(change)
                             delta_color = "normal" if change_pct >= 0 else "inverse"
                             st.metric(
-                                label=symbol.replace('USDT', ''),
-                                value=format_currency_safe(price),  # Changed to format_currency_safe
+                                label=symbol.replace("USDT", ""),
+                                value=format_currency_safe(price),
                                 delta=f"{change_pct:+.2f}%",
-                                delta_color=delta_color
+                                delta_color=delta_color,
                             )
                         except (ValueError, TypeError) as e:
                             logger.error(f"Error formatting market data for {symbol}: {e}")
-                            st.metric(symbol.replace('USDT', ''), format_currency_safe(price))  # Changed to format_currency_safe
+                            st.metric(symbol.replace("USDT", ""), format_currency_safe(price))
+
             if st.button("🔄 Refresh Market Data", key="market_refresh_data"):
                 st.rerun()
         else:
             st.info("🌙 No market data available. Please try refreshing.")
+
 
     # Trades tab
     with trades_tab:

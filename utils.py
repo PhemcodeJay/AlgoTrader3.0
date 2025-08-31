@@ -690,20 +690,42 @@ def generate_real_signals(symbols: List[str], interval: str = "60", limit: int =
 
     return signals[:settings.get('TOP_N_SIGNALS', 5)]
 
-def normalize_signal(signal: Dict) -> Dict:
-    """Normalize a signal dictionary for display purposes."""
+def normalize_signal(signal) -> dict:
+    """Normalize a signal (dict or ORM model) for display purposes."""
     try:
+        # If it's not already a dict, assume it's an ORM object
+        if not isinstance(signal, dict):
+            signal = {
+                "symbol": getattr(signal, "symbol", "N/A"),
+                "side": getattr(signal, "side", "N/A"),
+                "entry_price": getattr(signal, "entry_price", 0.0),
+                "tp": getattr(signal, "tp", 0.0),
+                "sl": getattr(signal, "sl", 0.0),
+                "score": getattr(signal, "score", 0.0),
+                "strategy": getattr(signal, "strategy", "Unknown"),
+                "created_at": getattr(signal, "created_at", datetime.now(timezone.utc)),
+            }
+        else:
+            # Strip out SQLAlchemy internal keys if dict came from __dict__
+            signal = {k: v for k, v in signal.items() if not k.startswith("_")}
+
+        # Normalize dict
         normalized = {
             "symbol": signal.get("symbol", "N/A"),
             "side": signal.get("side", "N/A"),
-            "entry_price": signal.get("entry_price", 0.0),
-            "tp": signal.get("tp", 0.0),
-            "sl": signal.get("sl", 0.0),
-            "score": signal.get("score", 0.0),
+            "entry_price": float(signal.get("entry_price", 0.0)),
+            "tp": float(signal.get("tp", 0.0)),
+            "sl": float(signal.get("sl", 0.0)),
+            "score": float(signal.get("score", 0.0)),
             "strategy": signal.get("strategy", "Unknown"),
-            "created_at": signal.get("created_at", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
+            "created_at": (
+                signal.get("created_at")
+                if isinstance(signal.get("created_at"), str)
+                else signal.get("created_at", datetime.now(timezone.utc)).strftime("%Y-%m-%d %H:%M:%S")
+            ),
         }
         return normalized
+
     except Exception as e:
         logger.error(f"Error normalizing signal: {e}")
         return {
@@ -714,5 +736,5 @@ def normalize_signal(signal: Dict) -> Dict:
             "sl": 0.0,
             "score": 0.0,
             "strategy": "Unknown",
-            "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         }

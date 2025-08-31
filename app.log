@@ -514,3 +514,75 @@ UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d' in posit
 2025-08-31 21:09:22,631 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
 2025-08-31 21:09:22,637 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
 2025-08-31 21:09:22,646 - utils - ERROR - Error normalizing signal: 'Signal' object has no attribute 'get'
+2025-08-31 21:24:09,328 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:24:09,361 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:24:09,365 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:24:20,357 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:24:57,399 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:25:22,923 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:25:50,760 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:25:52,761 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 21:25:53,044 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:26:03,532 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:26:04,290 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:26:14,933 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:26:14,965 - views.orders - INFO - Virtual open trades: []
+2025-08-31 21:26:15,064 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:26:15,158 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:26:25,246 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:26:25,246 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:26:26,005 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:26:35,443 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:27:01,172 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:27:22,941 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:27:52,370 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:27:54,374 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 21:27:54,442 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:28:04,561 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:28:04,756 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 21:28:04,794 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:28:14,878 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:29:23,043 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 21:34:59,175 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:34:59,189 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:34:59,192 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:35:09,472 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:35:32,625 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 1: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:35:54,443 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 2: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:36:24,548 - views.dashboard - ERROR - Error getting ticker snapshot on attempt 3: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=None)
+2025-08-31 21:36:26,570 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 21:36:27,156 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:36:37,429 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:36:37,521 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:36:47,633 - bybit_client - ERROR - ❌ Failed to initialize Bybit client: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+2025-08-31 21:36:47,789 - views.orders - INFO - Virtual open trades: []
+2025-08-31 21:36:47,815 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:36:47,823 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:36:52,779 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:36:53,587 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 21:36:53,853 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:36:54,742 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:37:33,012 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
+
+For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 21:41:25,155 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:41:25,162 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:41:25,164 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:41:25,841 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:41:27,839 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 21:41:31,588 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 21:41:36,709 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 21:41:38,899 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 21:41:39,004 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:41:42,062 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:41:44,515 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:41:46,554 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:41:46,847 - views.orders - INFO - Virtual open trades: []
+2025-08-31 21:41:46,889 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 21:41:46,911 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:41:47,775 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 21:41:47,845 - views.portfolio - ERROR - Error displaying signals: 'Signal' object has no attribute 'get'
+2025-08-31 21:41:47,913 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 21:41:48,244 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)

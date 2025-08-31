@@ -7,6 +7,8 @@ from engine import TradingEngine
 from db import db_manager
 from datetime import datetime, timezone
 
+from utils import normalize_signal
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
@@ -327,18 +329,33 @@ def show_portfolio(db, engine, client, trading_mode: str = "virtual"):
     with summary_tab:
         st.subheader("📊 Trading Summary")
         col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("**Recent Trades (Last 10)**")
-            recent_trades = get_trades_safe(db, limit=10)
-            display_trades_table(recent_trades, st, client)
-        with col2:
-            st.markdown("**Recent Signals**")
-            if "recent_signals_page" not in st.session_state:
-                st.session_state.recent_signals_page = 1
-            recent_signals = get_signals_safe(db)
-            display_signals(recent_signals, st, "Recent Signals", st.session_state.recent_signals_page, page_size=5)
-        if st.button("🔄 Refresh Summary", key="portfolio_refresh_summary"):
-            st.rerun()
+
+    with col1:
+        st.markdown("**Recent Trades (Last 10)**")
+        recent_trades = get_trades_safe(db, limit=10)
+        display_trades_table(recent_trades, st, client)
+
+    with col2:
+        st.markdown("**Recent Signals**")
+        if "recent_signals_page" not in st.session_state:
+            st.session_state.recent_signals_page = 1
+
+        recent_signals = get_signals_safe(db)
+
+        # ✅ Normalize ORM objects into dicts
+        recent_signals = [normalize_signal(sig) for sig in recent_signals]
+
+        display_signals(
+            recent_signals,
+            st,
+            "Recent Signals",
+            st.session_state.recent_signals_page,
+            page_size=5
+        )
+
+    if st.button("🔄 Refresh Summary", key="portfolio_refresh_summary"):
+        st.rerun()
+
 
 # Initialize components
 db = db_manager

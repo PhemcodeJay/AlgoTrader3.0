@@ -845,21 +845,36 @@ class BybitClient:
     def get_tickers(self, category: str = "linear") -> List[Dict[str, Any]]:
         if not self.client:
             return [
-                {"symbol": "BTCUSDT", "lastPrice": "100000.0"},
-                {"symbol": "ETHUSDT", "lastPrice": "4000.0"},
-                {"symbol": "DOGEUSDT", "lastPrice": "0.20"},
-                {"symbol": "SOLUSDT", "lastPrice": "200.0"},
-                {"symbol": "XRPUSDT", "lastPrice": "1.60"},
+                {"symbol": "BTCUSDT", "lastPrice": "100000.0", "priceChangePercent": "0.0"},
+                {"symbol": "ETHUSDT", "lastPrice": "4000.0", "priceChangePercent": "0.0"},
+                {"symbol": "DOGEUSDT", "lastPrice": "0.20", "priceChangePercent": "0.0"},
+                {"symbol": "SOLUSDT", "lastPrice": "200.0", "priceChangePercent": "0.0"},
+                {"symbol": "XRPUSDT", "lastPrice": "1.60", "priceChangePercent": "0.0"},
             ]
         try:
             response = self.client.get_tickers(category=category)
             if isinstance(response, dict) and response.get("retCode") == 0:
-                return response.get("result", {}).get("list", [])
-            logger.error(f"Error getting tickers: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}")
+                raw_list = response.get("result", {}).get("list", [])
+                
+                clean_list = []
+                for item in raw_list:
+                    # unwrap if it's a list instead of a dict
+                    if isinstance(item, list) and len(item) > 0:
+                        item = item[0]
+                    if not isinstance(item, dict):
+                        continue
+                    clean_list.append(item)
+
+                return clean_list
+
+            logger.error(
+                f"Error getting tickers: {sanitize_message(response.get('retMsg', 'Unknown error') if isinstance(response, dict) else 'Invalid response')}"
+            )
             return []
         except Exception as e:
             logger.error(f"Error getting tickers: {sanitize_message(str(e))}")
             return []
+
         
     def get_open_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
         # Virtual trading mode
