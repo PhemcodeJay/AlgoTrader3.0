@@ -103,7 +103,6 @@ class BybitClient:
         self.session = self._connect()
         key_env = "BYBIT_TESTNET_API_KEY" if self.testnet else "BYBIT_API_KEY"
         secret_env = "BYBIT_TESTNET_API_SECRET" if self.testnet else "BYBIT_API_SECRET"
-        logger.info(f"Connected to Bybit {'Testnet' if self.testnet else 'Mainnet'}")
         self.api_key = (os.getenv(key_env) or "").strip()
         self.api_secret = (os.getenv(secret_env) or "").strip()
         self.client: Optional[HTTPClient] = None

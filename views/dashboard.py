@@ -25,7 +25,7 @@ except ImportError:
     ACCOUNT_BALANCE = 100.0
     LEVERAGE = 10
 
-def get_ticker_snapshot_safe(client: BybitClient, max_retries: int = 3) -> List[dict]:
+def get_tickers(client: BybitClient, max_retries: int = 3) -> List[dict]:
     """Safe wrapper for getting ticker snapshot with retry logic"""
     base_url = f"https://api{'-testnet' if client.testnet else ''}.bybit.com"
     url = f"{base_url}/v5/market/tickers?category=linear"
@@ -252,7 +252,7 @@ def show_dashboard(db, engine, client, trading_mode: str = "virtual"):
     with market_tab:
         st.subheader("🌐 Market Overview")
         with st.spinner("Fetching market data..."):
-            market_data = get_ticker_snapshot_safe(client)
+            market_data = get_tickers(client)
         if market_data:
             cols = st.columns(min(6, len(market_data)))
             for i, ticker in enumerate(market_data[:6]):
