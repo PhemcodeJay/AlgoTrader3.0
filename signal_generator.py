@@ -5,11 +5,45 @@ import requests
 import sys
 import json
 import argparse
+import os
+from dotenv import load_dotenv
 from utils import get_candles, ema, sma, rsi, bollinger, atr, macd, classify_trend, RISK_PCT, ACCOUNT_BALANCE, LEVERAGE, ENTRY_BUFFER_PCT, MIN_VOLUME, MIN_ATR_PCT, RSI_ZONE, INTERVALS, MAX_SYMBOLS
+from ml import MLFilter
+
+load_dotenv()
+
+# Configuration
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+DEFAULT_SCAN_INTERVAL = int(os.getenv("DEFAULT_SCAN_INTERVAL", 3600))
+ML_ENABLED = os.getenv("ML_ENABLED", "true").lower() == "true"
 
 tz_utc3 = timezone(timedelta(hours=3))
 
-# === PDF GENERATOR ===
+# Notifications
+def send_discord(message):
+    if not DISCORD_WEBHOOK_URL:
+        return
+    try:
+        requests.post(DISCORD_WEBHOOK_URL, json={"content": message})
+    except Exception as e:
+        print(f"Error sending Discord notification: {e}")
+
+def send_telegram(message):
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        requests.post(url, data={
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "Markdown"
+        })
+    except Exception as e:
+        print(f"Error sending Telegram notification: {e}")
+
+# PDF Generator
 class SignalPDF(FPDF):
     def header(self):
         self.set_font("Arial", "B", 10)
@@ -28,26 +62,25 @@ class SignalPDF(FPDF):
             self.set_text_color(139, 0, 0)
             self.cell(0, 4, f"MARKET: {s['Market']}  BB: {s['BB Slope']}    Trail: {s['Trail']}", ln=1)
             self.set_text_color(0, 100, 100)
-            self.cell(0, 4, f"QTY: {s['Qty']}  MARGIN: {s['Margin']} USDT  LIQ: {s['Liq']}", ln=1)
+            self.cell(0, 4, f"MARGIN: {s['Margin']}  LIQ: {s['Liq']}    TIME: {s['Time']}", ln=1)
             self.set_text_color(0, 0, 0)
-            self.cell(0, 4, f"TIME: {s['Time']}", ln=1)
             self.cell(0, 4, "=" * 57, ln=1)
             self.ln(1)
 
-# === FORMATTER ===
+# Formatter
 def format_signal_block(s):
     return (
         f"==================== {s['Symbol']} ====================\n"
         f"📊 TYPE: {s['Type']}     📈 SIDE: {s['Side']}     🏆 SCORE: {s['Score']}%\n"
         f"💵 ENTRY: {s['Entry']}   🎯 TP: {s['TP']}         🛡️ SL: {s['SL']}\n"
         f"💱 MARKET: {s['Market']} 📍 BB: {s['BB Slope']}    🔄 Trail: {s['Trail']}\n"
-        f"📦 QTY: {s['Qty']} ⚖️ MARGIN: {s['Margin']} USDT ⚠️ LIQ: {s['Liq']}\n"
+        f"⚖️ MARGIN: {s['Margin']} ⚠️ LIQ: {s['Liq']}\n"
         f"⏰ TIME: {s['Time']}\n"
         "=========================================================\n"
     )
 
-# === SIGNAL ANALYSIS ===
-def analyze(symbol, interval="60"):
+# Signal Analysis
+def analyze(symbol, ml_filter=None, trading_mode="virtual"):
     data = {}
     for tf in INTERVALS:
         candles = get_candles(symbol, tf)
@@ -93,30 +126,26 @@ def analyze(symbol, interval="60"):
     opts = [tf['sma20'], tf['ema9'], tf['ema21']]
     entry = min(opts, key=lambda x: abs(x - price))
 
-    side = 'Buy' if sides[0] == 'LONG' else 'Sell'
-
-    tp = round(entry * (1.015 if side == 'Buy' else 0.985), 6)
-    sl = round(entry * (0.985 if side == 'Buy' else 1.015), 6)
-    trail = round(entry * (1 - ENTRY_BUFFER_PCT) if side == 'Buy' else entry * (1 + ENTRY_BUFFER_PCT), 6)
-    liq = round(entry * (1 - 1 / LEVERAGE) if side == 'Buy' else entry * (1 + 1 / LEVERAGE), 6)
+    side = 'LONG' if sides[0] == 'LONG' else 'SHORT'
+    tp = round(entry * (1.015 if side == 'LONG' else 0.985), 6)
+    sl = round(entry * (0.985 if side == 'LONG' else 1.015), 6)
+    trail = round(entry * (1 - ENTRY_BUFFER_PCT) if side == 'LONG' else entry * (1 + ENTRY_BUFFER_PCT), 6)
+    liq = round(entry * (1 - 1 / LEVERAGE) if side == 'LONG' else entry * (1 + 1 / LEVERAGE), 6)
 
     try:
         risk_amt = ACCOUNT_BALANCE * RISK_PCT
         sl_diff = abs(entry - sl)
-        qty = risk_amt / sl_diff
-        margin_usdt = round((qty * entry) / LEVERAGE, 3)
-        qty = round(qty, 3)
-    except (ZeroDivisionError, ValueError):
-        margin_usdt = 1.0
-        qty = 1.0
+        margin = round((risk_amt / sl_diff) * entry / LEVERAGE, 6)
+    except:
+        margin = 1
 
     score = 0
     score += 0.3 if tf['macd'] and tf['macd'] > 0 else 0
-    score += 0.2 if tf['rsi'] < RSI_ZONE[0] or tf['rsi'] > RSI_ZONE[1] else 0
-    score += 0.2 if bb_dir != "No" else 0
-    score += 0.3 if trend in ["Up", "Bullish"] else 0.1
+    score += 0.2 if tf['rsi'] < 30 or tf['rsi'] > 70 else 0
+    score += 0.3 if bb_dir != "No" else 0.1
+    score += 0.2 if trend == "Trend" else 0.1
 
-    return {
+    signal = {
         'Symbol': symbol,
         'Side': side,
         'Type': trend,
@@ -125,15 +154,19 @@ def analyze(symbol, interval="60"):
         'TP': tp,
         'SL': sl,
         'Trail': trail,
-        'Margin': margin_usdt,
-        'Qty': qty,
+        'Margin': margin,
         'Market': price,
         'Liq': liq,
         'BB Slope': bb_dir,
         'Time': datetime.now(tz_utc3).strftime("%Y-%m-%d %H:%M UTC+3")
     }
 
-# === SYMBOL FETCH ===
+    if ML_ENABLED and ml_filter:
+        signal = ml_filter.enhance_signal(signal, trading_mode=trading_mode)
+
+    return signal
+
+# Symbol Fetch
 def get_usdt_symbols():
     try:
         data = requests.get("https://api.bybit.com/v5/market/tickers?category=linear").json()
@@ -144,45 +177,64 @@ def get_usdt_symbols():
         print(f"Error fetching USDT symbols from Bybit: {e}")
         return []
 
-# === SIGNAL GENERATION ===
-def generate_signals(symbols, interval="60"):
-    signals = [analyze(s, interval) for s in symbols]
+# Signal Generation
+def generate_signals(symbols, trading_mode="virtual"):
+    ml_filter = MLFilter() if ML_ENABLED else None
+    signals = [analyze(s, ml_filter, trading_mode) for s in symbols]
     signals = [s for s in signals if s]
     signals.sort(key=lambda x: x['Score'], reverse=True)
-    return signals[:5]
+    return signals
 
-# === MAIN FUNCTION ===
-def main(symbols=None, interval="60"):
-    symbols = symbols or get_usdt_symbols()
-    print("\n Scanning Bybit USDT Futures for filtered signals...\n")
-    signals = generate_signals(symbols, interval)
-    
-    if signals:
-        blocks = [format_signal_block(s) for s in signals]
-        for blk in blocks:
-            print(blk)
+# Main Function
+def main(symbols=None, interval="60", loop=False, trading_mode="virtual"):
+    while True:
+        symbols = symbols or get_usdt_symbols()
+        print("\n🔍 Scanning Bybit USDT Futures for filtered signals...\n")
+        signals = generate_signals(symbols, trading_mode)
+        
+        if signals:
+            signals.sort(key=lambda x: x['Score'], reverse=True)
+            top5 = signals[:5]
+            blocks = [format_signal_block(s) for s in top5]
+            agg_msg = "\n".join(blocks)
 
-        # Save signals to JSON
-        with open("signals.json", "w") as f:
-            json.dump(signals, f, indent=2)
+            for blk in blocks:
+                print(blk)
 
-        # Generate PDF
-        pdf = SignalPDF()
-        pdf.add_page()
-        pdf.add_signals(signals)
-        fname = f"signals_{datetime.now(tz_utc3).strftime('%H%M')}.pdf"
-        pdf.output(fname)
-        print(f"📄 PDF saved: {fname}\n")
-        return signals, fname
-    else:
-        print("⚠️ No valid signals found\n")
-        return [], None
+            with open("signals.json", "w") as f:
+                json.dump(signals, f, indent=2)
+
+            pdf = SignalPDF()
+            pdf.add_page()
+            pdf.add_signals(signals[:20])
+            fname = f"signals_{datetime.now(tz_utc3).strftime('%H%M')}.pdf"
+            pdf.output(fname)
+            print(f"📄 PDF saved: {fname}")
+
+            send_discord("📊 **Top 5 Bybit Signals**\n\n" + agg_msg)
+            send_telegram("� ™ *Top 5 Bybit Signals*\n\n" + agg_msg)
+            print("✅ Notifications sent to Discord & Telegram.\n")
+        else:
+            print("⚠️ No valid signals found\n")
+
+        if not loop:
+            return signals, fname
+
+        wait = DEFAULT_SCAN_INTERVAL
+        print(f"⏳ Rescanning in {wait//60} minutes...")
+        for i in range(wait, 0, -1):
+            sys.stdout.write(f"\r Next scan in {i//60:02d}:{i%60:02d}")
+            sys.stdout.flush()
+            sleep(1)
+        print()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate trading signals for Bybit")
     parser.add_argument("--symbols", type=str, help="Comma-separated list of symbols (e.g., BTCUSDT,ETHUSDT)")
     parser.add_argument("--interval", type=str, default="60", choices=["15", "60", "240"], help="Timeframe interval")
+    parser.add_argument("--loop", action="store_true", help="Run in continuous loop like a bot")
+    parser.add_argument("--mode", type=str, default="virtual", choices=["real", "virtual"], help="Trading mode")
     args = parser.parse_args()
 
     symbols = args.symbols.split(",") if args.symbols else None
-    main(symbols, args.interval)
+    main(symbols, args.interval, args.loop, args.mode)

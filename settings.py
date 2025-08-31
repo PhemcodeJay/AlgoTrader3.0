@@ -2,21 +2,22 @@ import json
 import os
 import logging
 from typing import Dict, Any
+from dotenv import load_dotenv
 
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 def load_settings() -> Dict[str, Any]:
-    """Load settings from settings.json with validation and defaults."""
     default_settings = {
-        "SCAN_INTERVAL": 3600,
-        "TOP_N_SIGNALS": 5,
+        "SCAN_INTERVAL": int(os.getenv("DEFAULT_SCAN_INTERVAL", 3600)),
+        "TOP_N_SIGNALS": int(os.getenv("DEFAULT_TOP_N_SIGNALS", 5)),
         "MAX_LOSS_PCT": -15.0,
         "TP_PERCENT": 0.15,
         "SL_PERCENT": 0.05,
-        "LEVERAGE": 20,
-        "RISK_PCT": 0.01,
-        "VIRTUAL_BALANCE": 100.0,
-        "ENTRY_BUFFER_PCT": 0.002
+        "LEVERAGE": float(os.getenv("LEVERAGE", 20)),
+        "RISK_PCT": float(os.getenv("RISK_PCT", 0.01)),
+        "VIRTUAL_BALANCE": 100.0,  # Matches capital.json
+        "ENTRY_BUFFER_PCT": float(os.getenv("ENTRY_BUFFER_PCT", 0.002))
     }
 
     try:
@@ -27,14 +28,12 @@ def load_settings() -> Dict[str, Any]:
         with open("settings.json", "r") as f:
             settings = json.load(f)
 
-        # Validate settings
         for key, value in default_settings.items():
             if key not in settings:
                 logger.warning(f"Missing {key} in settings.json, using default: {value}")
                 settings[key] = value
             else:
                 try:
-                    # Ensure numeric types
                     if isinstance(value, (int, float)):
                         settings[key] = float(settings[key])
                         if key in ["LEVERAGE", "RISK_PCT", "VIRTUAL_BALANCE", "ENTRY_BUFFER_PCT"]:
@@ -44,7 +43,6 @@ def load_settings() -> Dict[str, Any]:
                         if key == "MAX_LOSS_PCT" and settings[key] > 0:
                             logger.warning(f"Invalid MAX_LOSS_PCT value {settings[key]}, using default: {value}")
                             settings[key] = value
-                    # Ensure positive integer for TOP_N_SIGNALS
                     if key == "TOP_N_SIGNALS":
                         settings[key] = int(settings[key])
                         if settings[key] <= 0:

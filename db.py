@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime, date, timezone
-from typing import List, Optional, Dict, Union, cast, Any
+from typing import List, Optional, Dict, Union, Any
 from dotenv import load_dotenv
 from sqlalchemy import (
     create_engine, String, Integer, Float, DateTime, Boolean, JSON, text
@@ -135,20 +135,25 @@ class SystemSetting(Base):
     key: Mapped[str] = mapped_column(String, unique=True)
     value: Mapped[str] = mapped_column(String)
 
-# === DB Setup ===
-DATABASE_URL = os.getenv("DATABASE_URL") or "sqlite:///trading.db"
+# DB Setup
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///trading.db")
 if not DATABASE_URL:
     logger.error("DATABASE_URL not set in .env and no fallback provided")
     raise RuntimeError("DATABASE_URL is not set and no fallback provided")
 
-def init_db():
-    Base.metadata.create_all(bind=create_engine(DATABASE_URL))
-
 class DatabaseManager:
-    def __init__(self, url: str):
-        self.engine = create_engine(url)
+    def __init__(self, database_url: str):
+        self.engine = create_engine(database_url, echo=False)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        init_db()
+        self.init_db()
+
+    def init_db(self):
+        try:
+            Base.metadata.create_all(bind=self.engine)
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {e}")
+            raise
 
     def get_session(self) -> Session:
         return self.SessionLocal()
@@ -190,7 +195,6 @@ class DatabaseManager:
             return session.query(Trade).filter(Trade.status == status).all()
 
     def get_real_trades(self, symbol: Optional[str] = None, limit: int = 50) -> List[Trade]:
-        """Get real (non-virtual) trades."""
         with self.get_session() as session:
             query = session.query(Trade).filter(Trade.virtual == False).order_by(Trade.timestamp.desc())
             if symbol:
@@ -285,7 +289,6 @@ class DatabaseManager:
                 Trade.timestamp >= today,
                 Trade.pnl.isnot(None)
             ).all()
-
             total_pnl = sum([trade.pnl for trade in trades if trade.pnl])
             return total_pnl
 

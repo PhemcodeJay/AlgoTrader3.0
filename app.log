@@ -589,3 +589,197 @@ For more information refer to the [docs](https://docs.streamlit.io/develop/api-r
 2025-08-31 21:41:49,960 - __main__ - ERROR - Critical error in main: `set_page_config()` can only be called once per app page, and must be called as the first Streamlit command in your script.
 
 For more information refer to the [docs](https://docs.streamlit.io/develop/api-reference/configuration/st.set_page_config).
+2025-08-31 22:16:41,117 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 22:16:41,138 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 22:16:41,139 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:16:43,201 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 22:16:48,535 - views.dashboard - ERROR - BybitClient method error on attempt 1: 'list' object has no attribute 'get'
+2025-08-31 22:16:52,020 - views.dashboard - ERROR - BybitClient method error on attempt 2: 'list' object has no attribute 'get'
+2025-08-31 22:16:55,461 - views.dashboard - ERROR - BybitClient method error on attempt 3: 'list' object has no attribute 'get'
+2025-08-31 22:16:57,468 - views.dashboard - WARNING - All retries failed, returning default ticker data
+2025-08-31 22:16:57,528 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:16:58,158 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 22:16:59,509 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:17:00,113 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 22:17:00,124 - views.orders - INFO - Virtual open trades: []
+2025-08-31 22:17:00,300 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 22:17:00,679 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:17:01,308 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 22:17:02,871 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:17:03,273 - bybit_client - INFO - ✅ Connected to Bybit Mainnet (Real Trading)
+2025-08-31 22:25:17,197 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 22:25:17,283 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 22:25:17,284 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:25:17,285 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:25:23,816 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:25:23,820 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:25:23,970 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:25:23,973 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:25:24,411 - views.orders - INFO - Virtual open trades: []
+2025-08-31 22:25:24,470 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 22:25:24,568 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:25:24,646 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:25:27,070 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:25:27,073 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:25:56,630 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 22:25:56,630 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:25:56,633 - bybit_client - WARNING - ⚠️ No API credentials → running in VIRTUAL mode using capital.json
+2025-08-31 22:28:01,343 - views.orders - INFO - Virtual open trades: []
+2025-08-31 22:29:28,419 - automated_trader - INFO - Trading loop started
+2025-08-31 22:29:28,420 - automated_trader - INFO - Automated trading system started
+2025-08-31 22:29:28,424 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 22:29:30,297 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:29:32,047 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:29:32,441 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:29:32,839 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:29:33,684 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:29:34,805 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:29:35,362 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:29:35,362 - views.signals - ERROR - signal_generator.py failed: Traceback (most recent call last):
+  File "C:\Users\PhemcodeJay\Documents\AlgoTrader3.0\signal_generator.py", line 188, in <module>
+    main(symbols, args.interval)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PhemcodeJay\Documents\AlgoTrader3.0\signal_generator.py", line 178, in main
+    print("\u26a0\ufe0f No valid signals found\n")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PhemcodeJay\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+
+2025-08-31 22:29:36,049 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:29:36,859 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:29:37,767 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:29:38,418 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:29:38,989 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:29:39,798 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:29:40,330 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:29:40,726 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:29:41,103 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:29:42,913 - db - INFO - Signal added to DB
+2025-08-31 22:29:42,948 - db - INFO - Signal added to DB
+2025-08-31 22:29:42,974 - db - INFO - Signal added to DB
+2025-08-31 22:29:42,975 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 22:29:43,059 - db - INFO - Trade added to DB
+2025-08-31 22:29:43,061 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-31 22:29:43,104 - db - INFO - Trade added to DB
+2025-08-31 22:29:43,104 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-31 22:29:43,112 - db - INFO - Trade added to DB
+2025-08-31 22:29:43,118 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-31 22:30:43,122 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 22:30:43,937 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:30:44,892 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:30:45,872 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:30:47,281 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:30:48,790 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:30:49,601 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:30:50,095 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:30:50,553 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:30:50,996 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:30:51,564 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:30:51,979 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:30:53,076 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:30:53,620 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:30:55,568 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:30:56,980 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:30:57,413 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:30:57,437 - db - INFO - Signal added to DB
+2025-08-31 22:30:57,646 - db - INFO - Signal added to DB
+2025-08-31 22:30:57,652 - db - INFO - Signal added to DB
+2025-08-31 22:30:57,654 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 22:30:57,661 - db - INFO - Trade added to DB
+2025-08-31 22:30:57,661 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-31 22:30:57,698 - db - INFO - Trade added to DB
+2025-08-31 22:30:57,699 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-31 22:30:57,711 - db - INFO - Trade added to DB
+2025-08-31 22:30:57,714 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-31 22:31:05,336 - views.orders - INFO - Virtual open trades: [<db.Trade object at 0x00000187A6F5BB60>, <db.Trade object at 0x00000187A6F5B5C0>, <db.Trade object at 0x00000187A6F5BF20>, <db.Trade object at 0x00000187A6F5B6B0>, <db.Trade object at 0x00000187A6F5BE30>, <db.Trade object at 0x00000187A6F5BA70>]
+2025-08-31 22:31:31,037 - views.orders - INFO - Virtual open trades: [<db.Trade object at 0x00000187A6F5B5C0>, <db.Trade object at 0x00000187A6F5BF20>, <db.Trade object at 0x00000187A6F5B6B0>, <db.Trade object at 0x00000187A6F5BE30>, <db.Trade object at 0x00000187A6F5B4D0>, <db.Trade object at 0x00000187A6F5B3E0>]
+2025-08-31 22:31:31,160 - views.orders - INFO - Attempting to close virtual order: 5d7d870e-7fdc-4744-a00a-b1bc5d72423d, symbol=BTCUSDT, side=Buy, qty=0.00015
+2025-08-31 22:31:31,177 - bybit_client - WARNING - No open virtual position found for BTCUSDT with side Buy
+2025-08-31 22:31:57,725 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 22:31:58,627 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:31:59,473 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:32:00,504 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:32:01,483 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:32:02,466 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:32:03,081 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:32:04,343 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:32:05,211 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:32:06,145 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:32:06,736 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:32:07,619 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:32:08,057 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:32:08,728 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:32:10,086 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:32:10,962 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:32:11,360 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:32:11,545 - db - INFO - Signal added to DB
+2025-08-31 22:32:11,553 - db - INFO - Signal added to DB
+2025-08-31 22:32:11,566 - db - INFO - Signal added to DB
+2025-08-31 22:32:11,569 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 22:32:11,576 - db - INFO - Trade added to DB
+2025-08-31 22:32:11,576 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-31 22:32:11,580 - db - INFO - Trade added to DB
+2025-08-31 22:32:11,580 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-31 22:32:11,599 - db - INFO - Trade added to DB
+2025-08-31 22:32:11,600 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-31 22:33:11,606 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 22:33:12,507 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:33:13,371 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:33:14,341 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:33:14,894 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:33:15,301 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:33:15,915 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:33:16,752 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:33:17,275 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:33:17,851 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:33:18,274 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:33:18,774 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:33:19,686 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:33:20,194 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:33:20,650 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:33:21,465 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:33:21,949 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:33:22,033 - db - INFO - Signal added to DB
+2025-08-31 22:33:22,079 - db - INFO - Signal added to DB
+2025-08-31 22:33:22,084 - db - INFO - Signal added to DB
+2025-08-31 22:33:22,088 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 22:33:22,094 - db - INFO - Trade added to DB
+2025-08-31 22:33:22,096 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-31 22:33:22,110 - db - INFO - Trade added to DB
+2025-08-31 22:33:22,111 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-31 22:33:22,121 - db - INFO - Trade added to DB
+2025-08-31 22:33:22,121 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-08-31 22:34:22,127 - engine - INFO - [Engine] Automated Trading Starting...
+
+2025-08-31 22:34:23,002 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:34:23,988 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:34:24,630 - utils - INFO - Successfully fetched candles for BTCUSDT from Bybit
+2025-08-31 22:34:26,119 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:34:27,033 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:34:27,422 - utils - INFO - Successfully fetched candles for ETHUSDT from Bybit
+2025-08-31 22:34:28,250 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:34:28,731 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:34:30,016 - utils - INFO - Successfully fetched candles for DOGEUSDT from Bybit
+2025-08-31 22:34:30,414 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:34:30,985 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:34:32,026 - utils - INFO - Successfully fetched candles for SOLUSDT from Bybit
+2025-08-31 22:34:32,802 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:34:33,264 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:34:33,742 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:34:34,366 - utils - INFO - Successfully fetched candles for XRPUSDT from Bybit
+2025-08-31 22:34:34,473 - db - INFO - Signal added to DB
+2025-08-31 22:34:34,479 - db - INFO - Signal added to DB
+2025-08-31 22:34:34,484 - db - INFO - Signal added to DB
+2025-08-31 22:34:34,489 - engine - INFO - [Engine] Signals Generated 3 signals
+2025-08-31 22:34:34,868 - db - INFO - Trade added to DB
+2025-08-31 22:34:34,869 - engine - INFO - Executed signal: BTCUSDT | Side: Buy | Qty: 0.00015 | Virtual: False
+2025-08-31 22:34:34,880 - db - INFO - Trade added to DB
+2025-08-31 22:34:34,881 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
+2025-08-31 22:34:34,937 - db - INFO - Trade added to DB
+2025-08-31 22:34:34,938 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False

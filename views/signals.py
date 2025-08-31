@@ -1,270 +1,181 @@
 import streamlit as st
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Dict, Union
+from datetime import datetime, timezone
+from typing import List, Dict
 from bybit_client import BybitClient
 from engine import TradingEngine
 from db import db_manager
 import pandas as pd
 import numpy as np
-import subprocess
-import json
-import os
-import sys
-from utils import format_price_safe, normalize_signal
+from utils import format_price_safe, normalize_signal, TP_PERCENT, SL_PERCENT
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
-# Constants (loaded from settings.json or defaults from utils.py)
-try:
-    from settings import load_settings
-    settings = load_settings()
-    RISK_PCT = settings.get('RISK_PCT', 0.01)
-    ACCOUNT_BALANCE = settings.get('VIRTUAL_BALANCE', 100.0)
-    LEVERAGE = settings.get('LEVERAGE', 10)
-    ENTRY_BUFFER_PCT = settings.get('ENTRY_BUFFER_PCT', 0.002)
-    TP_PERCENT = settings.get('TP_PERCENT', 0.015)
-    SL_PERCENT = settings.get('SL_PERCENT', 0.015)
-except ImportError:
-    RISK_PCT = 0.01
-    ACCOUNT_BALANCE = 100.0
-    LEVERAGE = 10
-    ENTRY_BUFFER_PCT = 0.002
-    TP_PERCENT = 0.015
-    SL_PERCENT = 0.015
-
+# Constants
+RISK_PCT = 0.01
+ACCOUNT_BALANCE = 100.0
+LEVERAGE = 10
+ENTRY_BUFFER_PCT = 0.002
 MIN_VOLUME = 1000
 MIN_ATR_PCT = 0.001
 RSI_ZONE = (20, 80)
 INTERVALS = ['15', '60', '240']
 MAX_SYMBOLS = 50
+RSI_PERIOD = 14
+ATR_PERIOD = 14
 
-def generate_real_signals(symbols: List[str], interval: str = "60") -> List[Dict]:
-    """Run signal_generator.py and read the generated signals and PDF."""
+def calculate_rsi(prices: List[float], period: int = RSI_PERIOD) -> float:
+    """Calculate RSI from price series"""
     try:
-        cmd = [sys.executable, "signal_generator.py", "--symbols", ",".join(symbols), "--interval", interval]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        prices = np.array(prices)
+        deltas = np.diff(prices)
+        gains = np.where(deltas > 0, deltas, 0)
+        losses = np.where(deltas < 0, -deltas, 0)
         
-        if result.returncode != 0:
-            logger.error(f"signal_generator.py failed: {result.stderr}")
-            st.error(f"🚨 Error running signal generator: {result.stderr}")
-            return [], None
+        avg_gain = np.mean(gains[-period:]) if len(gains) >= period else 0
+        avg_loss = np.mean(losses[-period:]) if len(losses) >= period else 0
+        
+        if avg_loss == 0:
+            return 100.0 if avg_gain > 0 else 50.0
+        
+        rs = avg_gain / avg_loss
+        return 100 - (100 / (1 + rs))
+    except Exception as e:
+        logger.error(f"Error calculating RSI: {e}")
+        return 50.0  # Neutral fallback
 
+def calculate_atr(highs: List[float], lows: List[float], closes: List[float], period: int = ATR_PERIOD) -> float:
+    """Calculate ATR from high, low, and close prices"""
+    try:
+        trs = []
+        for i in range(1, len(closes)):
+            high_low = highs[i] - lows[i]
+            high_prev_close = abs(highs[i] - closes[i-1])
+            low_prev_close = abs(lows[i] - closes[i-1])
+            tr = max(high_low, high_prev_close, low_prev_close)
+            trs.append(tr)
+        
+        if len(trs) < period:
+            return 0.0
+        return np.mean(trs[-period:])
+    except Exception as e:
+        logger.error(f"Error calculating ATR: {e}")
+        return 0.0
+
+def generate_signals(client: BybitClient, symbols: List[str], interval: str = "60") -> List[Dict]:
+    """Generate signals based on market data from BybitClient using kline data"""
+    try:
         signals = []
-        json_file = "signals.json"
-        if os.path.exists(json_file):
-            with open(json_file, "r", encoding="utf-8") as f:
-                signals = json.load(f)
-        
-        pdf_files = [f for f in os.listdir() if f.startswith("signals_") and f.endswith(".pdf")]
-        pdf_filename = max(pdf_files, key=os.path.getmtime, default=None) if pdf_files else None
-        
-        return signals, pdf_filename
-    except subprocess.TimeoutExpired:
-        logger.error("signal_generator.py timed out")
-        st.error("🚨 Signal generation timed out")
-        return [], None
+        for symbol in symbols:
+            # Fetch kline data (last 200 candles for sufficient history)
+            kline_data = client.get_kline(symbol, interval, limit=200)
+            if not kline_data or len(kline_data) < RSI_PERIOD + 1:
+                logger.warning(f"Insufficient kline data for {symbol}")
+                continue
+
+            # Extract prices
+            closes = [float(k['close']) for k in kline_data]
+            highs = [float(k['high']) for k in kline_data]
+            lows = [float(k['low']) for k in kline_data]
+            current_price = closes[-1] if closes else 0.0
+
+            if current_price == 0.0:
+                logger.warning(f"Invalid price data for {symbol}")
+                continue
+
+            # Calculate indicators
+            rsi = calculate_rsi(closes)
+            atr = calculate_atr(highs, lows, closes)
+            atr_pct = atr / current_price if current_price > 0 else 0.0
+
+            if atr_pct < MIN_ATR_PCT:
+                logger.debug(f"ATR {atr_pct:.4f} below minimum for {symbol}")
+                continue
+
+            if rsi < RSI_ZONE[0]:
+                side = "Buy"
+                entry = current_price * (1 + ENTRY_BUFFER_PCT)
+                sl = entry * (1 - SL_PERCENT)
+                tp = entry * (1 + TP_PERCENT)
+            elif rsi > RSI_ZONE[1]:
+                side = "Sell"
+                entry = current_price * (1 - ENTRY_BUFFER_PCT)
+                sl = entry * (1 + SL_PERCENT)
+                tp = entry * (1 - TP_PERCENT)
+            else:
+                continue
+
+            qty = (ACCOUNT_BALANCE * RISK_PCT * LEVERAGE) / entry
+            signals.append({
+                "symbol": symbol,
+                "side": side,
+                "entry": entry,
+                "qty": qty,
+                "sl": sl,
+                "tp": tp,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "score": max(50.0, 60.0 + (abs(rsi - 50) * 0.5))  # Dynamic score based on RSI strength
+            })
+        return signals
     except Exception as e:
         logger.error(f"Error generating signals: {e}")
-        st.error(f"🚨 Error generating signals: {e}")
-        return [], None
-
-def display_signals(signals: List, container, title: str, page: int = 1, page_size: int = 5):
-    """Reusable function to display signals"""
-    try:
-        if not signals:
-            container.info("🌙 No signals to display")
-            return
-
-        signals_data = []
-        for signal in signals:
-            normalized = normalize_signal(signal)
-            signals_data.append({
-                "Symbol": normalized["symbol"],
-                "Side": normalized["side"],
-                "Entry": f"${format_price_safe(normalized['entry_price'])}",
-                "TP": f"${format_price_safe(normalized['tp'])}",
-                "SL": f"${format_price_safe(normalized['sl'])}",
-                "Score": f"{normalized['score']:.1f}%",
-                "Strategy": normalized["strategy"],
-                "Time": normalized["created_at"]
-            })
-
-        if signals_data:
-            start_idx = (page - 1) * page_size
-            end_idx = start_idx + page_size
-            df = pd.DataFrame(signals_data[start_idx:end_idx])
-            container.dataframe(df, use_container_width=True, height=300)
-            col1, col2, col3 = container.columns([1, 3, 1])
-            if col1.button("◀️ Previous", key=f"{title}_prev"):
-                if page > 1:
-                    st.session_state[f"{title.lower().replace(' ', '_')}_page"] = page - 1
-                    st.rerun()
-            if col3.button("Next ▶️", key=f"{title}_next"):
-                if end_idx < len(signals_data):
-                    st.session_state[f"{title.lower().replace(' ', '_')}_page"] = page + 1
-                    st.rerun()
-        else:
-            container.info("🌙 No signal data to display")
-    except Exception as e:
-        logger.error(f"Error displaying signals: {e}")
-        container.error("🚨 Error displaying signals")
-
-def get_signals_safe(db) -> List:
-    """Safe wrapper for getting signals"""
-    try:
-        return db.get_signals(limit=50)
-    except Exception as e:
-        logger.error(f"Error getting signals: {e}")
         return []
 
-def show_signals(db, engine, client, trading_mode: str = "virtual"):
-    """Signals page with tabs and card-based layout"""
+def display_signals(signals: List[Dict], container, title: str, page: int = 1, page_size: int = 10):
+    if not signals:
+        container.info(f"🌙 No {title.lower()} to display")
+        return
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    signals_data = []
+    for signal in signals[start_idx:end_idx]:
+        signals_data.append({
+            "Symbol": signal.get("symbol", "N/A"),
+            "Side": signal.get("side", "N/A"),
+            "Entry": f"${format_price_safe(signal.get('entry'))}",
+            "TP": f"${format_price_safe(signal.get('tp'))}",
+            "SL": f"${format_price_safe(signal.get('sl'))}",
+            "Qty": f"{signal.get('qty', 0):.4f}",
+            "Score": f"{signal.get('score', 0):.1f}%"
+        })
+    if signals_data:
+        df = pd.DataFrame(signals_data)
+        container.dataframe(df, use_container_width=True)
+    else:
+        container.info(f"🌙 No {title.lower()} to display")
+
+def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: str):
     st.title("📡 Signals")
+    generator_tab, all_tab, buy_tab, sell_tab = st.tabs(["⚙️ Generator", "All Signals", "Buy Signals", "Sell Signals"])
 
-    # Custom CSS for styling
-    st.markdown("""
-        <style>
-        .stApp {
-            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            background: #2c2c4e;
-            border-radius: 10px;
-            padding: 5px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            color: #a0a0c0;
-            font-weight: 400;
-            border-radius: 8px;
-            margin: 5px;
-            padding: 10px 20px;
-            transition: all 0.3s ease;
-        }
-        .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(45deg, #6366f1, #a855f7);
-            color: #ffffff;
-            font-weight: 400;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .stTabs [data-baseweb="tab"]:hover {
-            background: #3b3b5e;
-            color: #ffffff;
-        }
-        .stContainer {
-            background: linear-gradient(145deg, #2a2a4a, #3b3b5e);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-        .stButton > button {
-            background: linear-gradient(45deg, #6366f1, #a855f7);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 500;
-        }
-        .stButton > button:hover {
-            background: linear-gradient(45deg, #8183ff, #c084fc);
-        }
-        .stButton > button[kind="primary"] {
-            background: linear-gradient(45deg, #10b981, #34d399);
-        }
-        .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(45deg, #34d399, #6ee7b7);
-        }
-        .stMetric {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 5px 0;
-        }
-        .stMetric > div {
-            font-size: 1.2rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .stSelectbox, .stNumberInput, .stMultiSelect {
-            background: #3b3b5e;
-            border-radius: 8px;
-            padding: 5px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    with generator_tab:
+        st.subheader("Generate Signals")
+        symbols = st.multiselect("Select Symbols", client.get_symbols(), default=["BTCUSDT", "ETHUSDT"])
+        interval = st.selectbox("Interval", INTERVALS, index=1)
+        if st.button("Generate Signals"):
+            with st.spinner("Generating..."):
+                signals = generate_signals(client, symbols, interval)
+                if signals:
+                    for signal in signals:
+                        db.add_signal(signal)
+                    st.success(f"Generated {len(signals)} signals")
+                else:
+                    st.warning("No signals generated")
 
-    # Signal Generation section
-    with st.expander("Generate New Signals"):
-        with st.container(border=True):
-            st.markdown("### Generate Signals")
-            symbols = client.get_symbols()
-            symbols = [s["symbol"] for s in symbols if s["symbol"].endswith("USDT")]
-            symbols = [s for s in symbols if s not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]]
-            selected_symbols = st.multiselect("Select Symbols", symbols, default=symbols[:3], key="signal_symbols_select")
-            interval = st.selectbox("Timeframe", ["15", "60", "240"], index=1, key="signal_interval_select")
-            if st.button("🔍 Generate Signals", type="primary", key="generate_signals_button"):
-                try:
-                    if not selected_symbols:
-                        st.error("🚨 Please select at least one symbol")
-                        return
-                    signals, pdf_filename = generate_real_signals(selected_symbols, interval=interval)
-                    if signals and db and hasattr(db, 'add_signal'):
-                        for signal in signals:
-                            db.add_signal(signal)
-                        st.success(f"✅ Generated {len(signals)} signals")
-                        with st.container(border=True):
-                            st.markdown("### Generated Signals")
-                            display_signals(signals, st, "Generated Signals")
-                        if pdf_filename and os.path.exists(pdf_filename):
-                            with open(pdf_filename, "rb") as f:
-                                st.download_button(
-                                    label="📄 Download Signals PDF",
-                                    data=f,
-                                    file_name=pdf_filename,
-                                    mime="application/pdf",
-                                    key="download_signals_pdf"
-                                )
-                        else:
-                            st.warning("⚠️ No PDF generated")
-                    else:
-                        st.info("🌙 No signals generated")
-                except Exception as e:
-                    logger.error(f"Error generating signals: {e}")
-                    st.error(f"🚨 Error generating signals: {e}")
+    # Fetch signals from DB
+    db_signals = db.get_signals()
 
-    # Initialize pagination state
-    if "all_signals_page" not in st.session_state:
-        st.session_state.all_signals_page = 1
-    if "buy_signals_page" not in st.session_state:
-        st.session_state.buy_signals_page = 1
-    if "sell_signals_page" not in st.session_state:
-        st.session_state.sell_signals_page = 1
-
-    # Fetch signals
-    signals = get_signals_safe(db)
-
-    # Define tabs
-    all_tab, buy_tab, sell_tab = st.tabs(["All Signals", "Buy Signals", "Sell Signals"])
-
-    # All Signals tab
     with all_tab:
-        display_signals(signals, st, "All Signals", st.session_state.all_signals_page, page_size=10)
+        display_signals(db_signals, st, "All Signals", st.session_state.all_signals_page)
 
-    # Buy Signals tab
     with buy_tab:
-        buy_signals = [s for s in signals if getattr(s, "side", "").upper() in ["BUY", "LONG"]]
-        display_signals(buy_signals, st, "Buy Signals", st.session_state.buy_signals_page, page_size=10)
+        buy_signals = [s for s in db_signals if s["side"] == "Buy"]
+        display_signals(buy_signals, st, "Buy Signals", st.session_state.buy_signals_page)
 
-    # Sell Signals tab
     with sell_tab:
-        sell_signals = [s for s in signals if getattr(s, "side", "").upper() in ["SELL", "SHORT"]]
-        display_signals(sell_signals, st, "Sell Signals", st.session_state.sell_signals_page, page_size=10)
+        sell_signals = [s for s in db_signals if s["side"] == "Sell"]
+        display_signals(sell_signals, st, "Sell Signals", st.session_state.sell_signals_page)
 
-    if st.button("🔄 Refresh Signals", key="refresh_signals_button"):
+    if st.button("🔄 Refresh Signals"):
         st.rerun()

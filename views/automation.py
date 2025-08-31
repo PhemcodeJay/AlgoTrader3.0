@@ -8,37 +8,36 @@ from typing import Dict, Optional, List
 from bybit_client import BybitClient
 from engine import TradingEngine
 from db import db_manager
+from ml import MLFilter
 import pandas as pd
+from utils import format_currency_safe, display_trades_table
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, filename="automation.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
 
 class AutomatedTrader:
-    """Automated trading system"""
-    
     def __init__(self, engine):
         self.is_running = False
         self.thread = None
         self.start_time = None
         self.engine = engine
+        self.ml_filter = MLFilter() if os.getenv("ML_ENABLED", "true").lower() == "true" else None
         self.stats = {
             "signals_generated": 0,
             "trades_executed": 0,
             "success_rate": 0.0,
             "uptime": "0:00:00"
         }
-        
+
     def start(self) -> bool:
-        """Start the automated trading system"""
         if self.is_running:
             logger.warning("Automation is already running")
             return False
-            
         try:
             self.is_running = True
             self.start_time = datetime.now(timezone.utc)
-            self.thread = threading.Thread(target=self._trading_loop, daemon=True)
+            self.thread = threading.Thread(target=self._trading_loop, args=(st.session_state.trading_mode,), daemon=True)
             self.thread.start()
             logger.info("Automated trading system started")
             return True
@@ -46,67 +45,53 @@ class AutomatedTrader:
             logger.error(f"Failed to start automation: {e}")
             self.is_running = False
             return False
-    
+
     def stop(self):
-        """Stop the automated trading system"""
         if not self.is_running:
             logger.warning("Automation is not running")
             return
-            
         self.is_running = False
         if self.thread and self.thread.is_alive():
             self.thread.join(timeout=5)
         logger.info("Automated trading system stopped")
-    
-    def _trading_loop(self):
-        """Main trading loop"""
+
+    def _trading_loop(self, trading_mode: str):
         logger.info("Trading loop started")
-        
         while self.is_running:
             try:
-                # Generate signals
-                signals = self.engine.run_once()
+                signals = self.engine.run_once(trading_mode=trading_mode)
+                if self.ml_filter:
+                    signals = [self.ml_filter.enhance_signal(signal, trading_mode) for signal in signals]
                 self.stats["signals_generated"] += len(signals)
-                
-                # Execute top signals
                 for signal in signals:
-                    trade = self.engine.execute_signal(signal)
+                    trade = self.engine.execute_signal(signal, trading_mode)
                     if trade:
                         self.stats["trades_executed"] += 1
                         try:
                             db_manager.add_trade(trade)
                         except Exception as e:
                             logger.error(f"Error saving trade to database: {e}")
-                
-                # Update success rate
                 trade_stats = self.engine.get_trade_statistics()
                 self.stats["success_rate"] = trade_stats.get("win_rate", 0.0)
-                
                 self._update_uptime()
-                time.sleep(60)  # Run every minute
-                
+                time.sleep(60)
             except Exception as e:
                 logger.error(f"Error in trading loop: {e}")
-                time.sleep(30)  # Wait before retrying
-    
+                time.sleep(30)
+
     def _update_uptime(self):
-        """Update uptime"""
         if self.start_time:
             uptime = datetime.now(timezone.utc) - self.start_time
-            hours, remainder = divmod(uptime.total_seconds(), 3600)
-            minutes, seconds = divmod(remainder, 60)
-            self.stats["uptime"] = f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
-    
+            self.stats["uptime"] = str(uptime).split(".")[0]
+
     def get_status(self) -> Dict:
-        """Get current automation status"""
         return {
             "is_running": self.is_running,
             "start_time": self.start_time.isoformat() if self.start_time else None,
             "stats": self.stats.copy()
         }
-    
+
     def reset_stats(self):
-        """Reset trading statistics"""
         self.stats = {
             "signals_generated": 0,
             "trades_executed": 0,
@@ -115,169 +100,42 @@ class AutomatedTrader:
         }
         logger.info("Statistics reset")
 
-def display_log_stats(log_file: str, container, refresh_key: str):
-    """Display log statistics"""
-    try:
-        if os.path.exists(log_file) and os.access(log_file, os.R_OK):
-            with open(log_file, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-            if not lines:
-                container.info("🌙 No logs found")
-                return
-
-            error_count = sum(1 for line in lines if "ERROR" in line.upper())
-            warning_count = sum(1 for line in lines if "WARNING" in line.upper())
-            info_count = sum(1 for line in lines if "INFO" in line.upper())
-
-            recent_lines = lines[-10:]
-            log_text = "".join(recent_lines)
-            container.text_area("Recent Logs", log_text, height=150, key=f"recent_log_area_{refresh_key}")
-
-            col1, col2, col3 = container.columns(3)
-            with col1:
-                st.metric("Errors", error_count)
-            with col2:
-                st.metric("Warnings", warning_count)
-            with col3:
-                st.metric("Info", info_count)
-        else:
-            container.info("🌙 No log file found")
-    except Exception as e:
-        logger.error(f"Error displaying log stats: {e}")
-        container.error(f"🚨 Error displaying log stats: {e}")
-
-def show_automation(automated_trader, db, engine, client, trading_mode: str = "virtual"):
-    """Automation page with tabs and card-based layout"""
+def show_automation(automated_trader, db, engine, client, trading_mode: str):
     st.title("🤖 Automation")
+    st.markdown("---")
+    automation_tab, logs_tab, stats_tab = st.tabs(["⚙️ Automation", "📜 Logs", "📊 Statistics"])
 
-    # Custom CSS for styling
-    st.markdown("""
-        <style>
-        .stApp {
-            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
-            color: #e0e0e0;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            background: #2c2c4e;
-            border-radius: 10px;
-            padding: 5px;
-        }
-        .stTabs [data-baseweb="tab"] {
-            color: #a0a0c0;
-            font-weight: 400;
-            border-radius: 8px;
-            margin: 5px;
-            padding: 10px 20px;
-            transition: all 0.3s ease;
-        }
-        .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(45deg, #6366f1, #a855f7);
-            color: #ffffff;
-            font-weight: 400;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .stTabs [data-baseweb="tab"]:hover {
-            background: #3b3b5e;
-            color: #ffffff;
-        }
-        .stContainer {
-            background: linear-gradient(145deg, #2a2a4a, #3b3b5e);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-        .stButton > button {
-            background: linear-gradient(45deg, #6366f1, #a855f7);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 500;
-        }
-        .stButton > button:hover {
-            background: linear-gradient(45deg, #8183ff, #c084fc);
-        }
-        .stButton > button[kind="primary"] {
-            background: linear-gradient(45deg, #10b981, #34d399);
-        }
-        .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(45deg, #34d399, #6ee7b7);
-        }
-        .stMetric {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 5px 0;
-        }
-        .stMetric > div {
-            font-size: 1.2rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .stSelectbox, .stNumberInput {
-            background: #3b3b5e;
-            border-radius: 8px;
-            padding: 5px;
-        }
-        .stTextArea textarea {
-            background: rgba(255,255,255,0.05);
-            color: #ffffff;
-            border-radius: 8px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Define tabs
-    control_tab, logs_tab, stats_tab = st.tabs(["🎛️ Controls", "📜 Logs", "📊 Statistics"])
-
-    # Controls tab
-    with control_tab:
+    with automation_tab:
         with st.container(border=True):
             st.markdown("### Automation Controls")
+            automation_enabled = automated_trader.get_status()["is_running"]
             col1, col2 = st.columns(2)
             with col1:
-                leverage = st.slider("Leverage", 1, 50, 10, key="automation_leverage")
+                leverage = st.number_input("Leverage", value=10, min_value=1, max_value=100, key="auto_leverage")
             with col2:
-                strategy = st.selectbox("Strategy", ["Multi-TF", "Scalping", "Trend Following"], key="automation_strategy")
-
-            trader_status = automated_trader.get_status()
-            automation_enabled = trader_status["is_running"]
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("▶️ Start Automation", type="primary", key="start_automation"):
-                    if not trader_status["is_running"]:
-                        automated_trader.start()
-                        st.success("✅ Automation started successfully")
-                        st.rerun()
-                    else:
-                        st.warning("⚠️ Automation is already running")
-            with col2:
-                if st.button("🛑 Stop Automation", type="secondary", key="stop_automation"):
-                    if trader_status["is_running"]:
-                        automated_trader.stop()
-                        st.success("✅ Automation stopped successfully")
-                        st.rerun()
-                    else:
-                        st.warning("⚠️ Automation is not running")
-
+                strategy = st.selectbox("Strategy", ["Trend", "Mean", "Breakout"], key="auto_strategy")
+            col3, col4 = st.columns(2)
+            with col3:
+                if st.button("🚀 Start Automation", type="primary", key="start_automation", disabled=automation_enabled):
+                    automated_trader.start()
+                    st.success("✅ Automation started successfully")
+                    st.rerun()
+            with col4:
+                if st.button("⏹️ Stop Automation", key="stop_automation", disabled=not automation_enabled):
+                    automated_trader.stop()
+                    st.success("✅ Automation stopped successfully")
+                    st.rerun()
             if automation_enabled:
                 st.success(f"✅ Automation is running (Leverage: {leverage}x, Strategy: {strategy})")
             else:
                 st.warning("⏸️ Automation is stopped")
-
             if st.button("🔄 Refresh Automation", key="refresh_automation"):
                 st.rerun()
-
             if st.button("🔄 Reset Statistics", key="reset_stats"):
                 automated_trader.reset_stats()
                 st.success("✅ Statistics reset successfully")
                 st.rerun()
 
-    # Logs tab
     with logs_tab:
         with st.container(border=True):
             st.markdown("### Automation Logs")
@@ -286,7 +144,7 @@ def show_automation(automated_trader, db, engine, client, trading_mode: str = "v
                 if os.path.exists(log_file) and os.access(log_file, os.R_OK):
                     with open(log_file, "r", encoding="utf-8") as f:
                         lines = f.readlines()
-                    lines = lines[-200:]  # Show last 200 lines max
+                    lines = lines[-200:]
                     if lines:
                         log_text = "".join(lines)
                         st.text_area("Logs", log_text, height=400, key="automation_logs")
@@ -305,11 +163,9 @@ def show_automation(automated_trader, db, engine, client, trading_mode: str = "v
                 logger.error(f"Error displaying automation logs: {e}")
                 st.error(f"🚨 Error displaying automation logs: {e}")
 
-    # Statistics tab
     with stats_tab:
         with st.container(border=True):
             st.markdown("### 📊 Automation Statistics")
-            display_log_stats("automation.log", st, "refresh_automation_stats")
             status = automated_trader.get_status()
             col1, col2 = st.columns(2)
             with col1:
@@ -326,4 +182,4 @@ client = engine.client
 automated_trader = AutomatedTrader(engine)
 
 # Run the app
-show_automation(automated_trader, db, engine, client)
+show_automation(automated_trader, db, engine, client, st.session_state.trading_mode)

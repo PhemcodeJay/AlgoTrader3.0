@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-from db import db  # Your SQLAlchemy DatabaseManager
+from db import db
 
-MODEL_PATH = "ml_models/profit_xgb_model.pkl"
-
+MODEL_PATH = os.getenv("ML_MODEL_PATH", "models/market_model.pkl")
+ML_ENABLED = os.getenv("ML_ENABLED", "true").lower() == "true"
 
 class MLFilter:
     def __init__(self):
-        self.model = self._load_model()
+        self.model = self._load_model() if ML_ENABLED else None
         self.db = db
         self._last_training_size = 0
 
@@ -43,8 +43,12 @@ class MLFilter:
             1 if signal.get("regime") == "Breakout" else 0,
         ])
 
-    def enhance_signal(self, signal: dict) -> dict:
-        if self.model:
+    def enhance_signal(self, signal: dict, trading_mode: str = "virtual") -> dict:
+        if not ML_ENABLED:
+            logger.info("[ML] ML disabled, using fallback scoring.")
+            signal["score"] = signal.get("score", np.random.uniform(55, 70))
+            signal["confidence"] = int(min(signal["score"] + np.random.uniform(5, 20), 100))
+        elif self.model:
             features = self.extract_features(signal).reshape(1, -1)
             prob = self.model.predict_proba(features)[0][1]
             signal["score"] = round(prob * 100, 2)
@@ -56,7 +60,7 @@ class MLFilter:
         try:
             entry_price = float(signal.get("entry", 0))
             leverage = int(signal.get("leverage", 20))
-            capital = float(signal.get("capital", 100))
+            capital = float(signal.get("capital", 100 if trading_mode == "virtual" else 0))
 
             if entry_price > 0 and leverage > 0:
                 margin = capital / leverage
@@ -70,21 +74,17 @@ class MLFilter:
 
     def load_data_from_db(self, limit=1000) -> list:
         combined = []
-
-        # Load trades data
         trades = self.db.get_trades(limit=limit)
         for trade in trades:
             t = trade.to_dict()
             entry_price = t.get("entry_price") or 0
             exit_price = t.get("exit_price") or 0
-
-            # Compute profit safely
             pnl = t.get("pnl")
             if entry_price and exit_price:
                 direction = 1 if t.get("side") == "LONG" else -1
                 profit = 1 if direction * (exit_price - entry_price) > 0 else 0
             else:
-                profit = 1 if (pnl or 0) > 0 else 0  # <- safe fallback
+                profit = 1 if (pnl or 0) > 0 else 0
 
             combined.append({
                 "entry": entry_price,
@@ -99,12 +99,10 @@ class MLFilter:
                 "profit": profit,
             })
 
-        # Load signals data
         signals = self.db.get_signals(limit=limit)
         for signal in signals:
             s = signal.to_dict()
             indicators = s.get("indicators") or {}
-
             entry = s.get("entry") or indicators.get("entry") or 0
             tp = s.get("tp") or indicators.get("tp") or 0
             sl = s.get("sl") or indicators.get("sl") or 0
@@ -125,8 +123,11 @@ class MLFilter:
         logger.info(f"[ML] ✅ Loaded {len(combined)} total training records from DB.")
         return combined
 
-
     def train_from_db(self):
+        if not ML_ENABLED:
+            logger.info("[ML] ML disabled, skipping training.")
+            return
+
         all_data = self.load_data_from_db()
         df = pd.DataFrame(all_data)
 
@@ -134,7 +135,6 @@ class MLFilter:
             logger.error(f"[ML] ❌ Not enough data to train. Found only {len(df)} rows.")
             return
 
-        # Encode categorical
         df["side_enc"] = df["side"].map({"LONG": 1, "SHORT": 0}).fillna(0)
         df["trend_enc"] = df["trend"].map({"Up": 1, "Down": -1, "Neutral": 0}).fillna(0)
         df["regime_enc"] = df["regime"].map({"Breakout": 1, "Mean": 0}).fillna(0)
@@ -160,7 +160,7 @@ class MLFilter:
             eval_metric="logloss",
             random_state=42
         )
-        
+
         try:
             model.fit(X_train, y_train)
             os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
@@ -177,18 +177,20 @@ class MLFilter:
             logger.info(f"[ML] 🎯 Train accuracy: {train_acc:.2%}")
             logger.info(f"[ML] 🎯 Test accuracy: {acc:.2%}")
             logger.info(f"[ML] 💾 Model saved to: {MODEL_PATH}")
-            
         except Exception as e:
             logger.error(f"[ML] ❌ Training failed: {e}")
 
     def update_model_with_new_data(self, min_new_records=10):
+        if not ML_ENABLED:
+            logger.info("[ML] ML disabled, skipping model update.")
+            return False
+
         try:
             total_trades = self.db.get_trades_count()
             total_signals = self.db.get_signals_count()
             total_records = total_trades + total_signals
-
             new_records = total_records - self._last_training_size
-            
+
             if new_records >= min_new_records:
                 logger.info(f"[ML] 🔄 Found {new_records} new records. Retraining model...")
                 self.train_from_db()
@@ -196,7 +198,6 @@ class MLFilter:
             else:
                 logger.info(f"[ML] ℹ️ Only {new_records} new records. Minimum {min_new_records} required for retraining.")
                 return False
-                
         except Exception as e:
             logger.error(f"[ML] ❌ Failed to update model: {e}")
             return False
@@ -205,13 +206,12 @@ class MLFilter:
         stats = {
             "model_exists": self.model is not None,
             "model_path": MODEL_PATH,
-            "model_file_exists": os.path.exists(MODEL_PATH)
+            "model_file_exists": os.path.exists(MODEL_PATH),
+            "ml_enabled": ML_ENABLED
         }
-        
         try:
             data = self.load_data_from_db()
             df = pd.DataFrame(data)
-            
             stats.update({
                 "total_records": len(df),
                 "profitable_records": int(sum(df["profit"])) if not df.empty else 0,
@@ -221,11 +221,8 @@ class MLFilter:
             })
         except Exception as e:
             stats["error"] = str(e)
-            
         return stats
 
-
-# === CLI Entrypoint ===
 if __name__ == "__main__":
     ml = MLFilter()
     logger.info(f"[ML] 📊 Current model stats: {ml.get_model_stats()}")

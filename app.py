@@ -5,6 +5,7 @@ import sys
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional
 import json
+from dotenv import load_dotenv
 
 # Views
 from views.dashboard import show_dashboard
@@ -24,7 +25,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Configure logging (single configuration)
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,32 +38,16 @@ logger = logging.getLogger(__name__)
 
 # Utility functions
 def format_currency_safe(value: Optional[float]) -> str:
-    """Format currency safely"""
     try:
         return f"${float(value):.2f}" if value is not None else "$0.00"
     except (ValueError, TypeError) as e:
         logger.warning(f"Invalid value for currency formatting: {value}, error: {e}")
         return "$0.00"
 
-def load_virtual_balance() -> Dict[str, float]:
-    """Load virtual balance from capital.json"""
-    try:
-        if os.path.exists("capital.json"):
-            with open("capital.json", "r", encoding="utf-8") as f:
-                capital_data = json.load(f)
-                return capital_data.get("virtual", {"capital": 100.0, "available": 100.0})
-        else:
-            logger.info("capital.json not found, using default balance")
-            return {"capital": 100.0, "available": 100.0}
-    except Exception as e:
-        logger.error(f"Error loading virtual balance: {e}")
-        st.error(f"🚨 Error loading virtual balance: {e}")
-        return {"capital": 100.0, "available": 100.0}
-
 # Ensure UTF-8 output
 sys.stdout.reconfigure(encoding="utf-8")
 
-# Custom CSS for modern, colorful styling
+# Custom CSS
 CSS = """
     <style>
     .stApp {
@@ -111,120 +96,60 @@ CSS = """
     }
     .stAlert {
         border-radius: 8px;
-        background: rgba(255,255,255,0.1);
-        color: #ffffff;
-    }
-    .stCaption {
-        color: #a0a0c0;
+        background: rgba(255,255,255,0.05);
     }
     </style>
 """
+st.markdown(CSS, unsafe_allow_html=True)
 
 def main():
-    """Main application function"""
     try:
-        # Apply custom CSS
-        st.markdown(CSS, unsafe_allow_html=True)
-
+        # Initialize session state
         init_session_state()
 
-        db, engine, client, automated_trader = init_components()
-
-        if not db or not engine or not client:
-            st.error("❌ Failed to initialize core components. Please check logs.")
-            st.info("💡 Try refreshing the page or check the application logs.")
-            return
+        # Check for API credentials
+        load_dotenv()
+        api_key = os.getenv("BYBIT_API_KEY")
+        api_secret = os.getenv("BYBIT_API_SECRET")
+        has_api_credentials = bool(api_key and api_secret and api_key != "F7aQeUkd3obyUSDeNJ" and api_secret != "A8WNJSiQodExiy2U2GsKTp2Na5ytSwBlK7iD")
 
         # Sidebar
-        with st.sidebar:
-            st.title("🎯 AlgoTrader")
-            st.markdown("---")
+        st.sidebar.image("logo.png", width=150)
+        st.sidebar.title("AlgoTrader")
+        
+        # Trading mode selection
+        mode_options = ["Virtual"]
+        if has_api_credentials:
+            mode_options.append("Real")
+        else:
+            st.sidebar.warning("Real mode disabled: Missing or default API credentials in .env")
+        
+        selected_mode = st.sidebar.selectbox(
+            "Trading Mode",
+            options=mode_options,
+            index=0 if st.session_state.trading_mode == "virtual" else 1 if has_api_credentials else 0,
+            key="trading_mode_select"
+        )
+        st.session_state.trading_mode = "virtual" if selected_mode == "Virtual" else "real"
 
-            # Trading Mode Selection
-            st.subheader("Trading Mode")
-            trading_mode = st.selectbox(
-                "Select Mode",
-                ["Virtual", "Real"],
-                index=0 if st.session_state.trading_mode == 'virtual' else 1,
-                help="Virtual mode uses paper trading, Real mode executes actual trades",
-                key="trading_mode_select"
-            )
-            st.session_state.trading_mode = trading_mode.lower()
+        # Initialize components with current trading mode
+        db, engine, client, automated_trader = init_components(st.session_state.trading_mode)
 
-            # Mode indicator
-            if trading_mode == 'Virtual':
-                st.success("🟢 Virtual Mode")
-            else:
-                st.warning("🔴 Real Mode")
+        if db is None or engine is None or client is None or automated_trader is None:
+            st.error("🚨 Failed to initialize application components")
+            return
 
-            # Live data status
-            try:
-                if client and hasattr(client, 'is_connected') and client.is_connected():
-                    st.success("📡 Live Data")
-                else:
-                    st.info("🌐 Real-Time Market Data (Public)")
-            except AttributeError:
-                logger.warning("BybitClient does not have is_connected method")
-                st.info("🌐 Real-Time Market Data (Public)")
+        # Sidebar navigation
+        page = st.sidebar.radio(
+            "Navigation",
+            ["Dashboard", "Positions", "Orders", "Signals", "Portfolio", "Automation", "ML", "Logs"],
+            index=0
+        )
 
-            # Data freshness indicator
-            current_time = datetime.now(timezone(timedelta(hours=3))).strftime("%H:%M:%S")
-            st.caption(f"Last updated: {current_time}")
+        # Auto-refresh toggle
+        auto_refresh = st.sidebar.checkbox("Auto-refresh (30s)", value=True)
 
-            st.markdown("---")
-
-            # Navigation
-            page = st.selectbox(
-                "Navigate",
-                ["Dashboard", "Positions", "Orders", "Signals", "Portfolio", "Automation", "Logs"],
-                key="navigation"
-            )
-
-            # Wallet Information
-            st.markdown("---")
-            st.subheader("💰 Wallet Status")
-
-            # Virtual Wallet
-            try:
-                virtual_balance = load_virtual_balance()
-                capital = float(virtual_balance.get("capital", 100.0))
-                available = float(virtual_balance.get("available", capital))
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Virtual Balance", format_currency_safe(capital))
-                with col2:
-                    st.metric("Virtual Available", format_currency_safe(available))
-            except Exception as e:
-                logger.error(f"Error loading virtual wallet: {e}")
-                st.error("🚨 Error loading virtual wallet")
-
-            # Real Wallet
-            try:
-                if client and hasattr(client, 'get_wallet_balance'):
-                    real_balance = client.get_wallet_balance()
-                    total_equity = real_balance.get('totalEquity', 0) if isinstance(real_balance, dict) else 0
-                    available_balance = real_balance.get('totalAvailableBalance', 0) if isinstance(real_balance, dict) else 0
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Real Balance", format_currency_safe(total_equity))
-                    with col2:
-                        st.metric("Real Available", format_currency_safe(available_balance))
-                else:
-                    st.info("⚠️ No API connection")
-                    st.metric("Real Balance", "$0.00")
-            except Exception as e:
-                logger.error(f"Error loading real wallet: {e}")
-                st.error("🚨 Error loading real wallet")
-
-            st.markdown("---")
-
-            # Auto-refresh toggle
-            auto_refresh = st.checkbox("Auto Refresh (30s)", value=False, key="auto_refresh")
-            if st.button("🔄 Refresh Now", key="refresh_now"):
-                st.session_state.last_refresh = datetime.now().timestamp()
-                st.rerun()
-
-        # Main content routing
+        # Display selected page
         try:
             if page == "Dashboard":
                 show_dashboard(db, engine, client, st.session_state.trading_mode)
@@ -246,7 +171,7 @@ def main():
             logger.error(f"Error in page {page}: {e}")
             st.error(f"🚨 Error loading {page}: {str(e)}")
 
-        # Auto-refresh implementation (non-blocking)
+        # Auto-refresh implementation
         if auto_refresh:
             current_time = datetime.now().timestamp()
             if current_time - st.session_state.last_refresh >= 30:
@@ -257,25 +182,19 @@ def main():
         logger.error(f"Critical error in main: {e}")
         st.error(f"🚨 Critical application error: {str(e)}")
 
-# Initialize components safely
-@st.cache_resource
-def init_components():
-    """Initialize database and trading components with error handling"""
+def init_components(trading_mode: str):
     try:
         from db import db_manager, init_db
         from engine import TradingEngine
         from bybit_client import BybitClient
         from automated_trader import AutomatedTrader
 
-        database_url = os.getenv("DATABASE_URL", "sqlite:///trading.db")
-        try:
-            init_db()
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-            st.warning("⚠️ Database initialization failed, continuing with limited functionality")
-
+        init_db()
         db_manager_instance = db_manager
         engine = TradingEngine()
+        # Override .env settings with the selected trading mode
+        os.environ["REAL"] = "true" if trading_mode == "real" else "false"
+        os.environ["VIRTUAL"] = "true" if trading_mode == "virtual" else "false"
         client = BybitClient()
         automated_trader = AutomatedTrader(engine)
 
@@ -290,18 +209,15 @@ def init_components():
         st.error(f"🚨 Failed to initialize components: {e}")
         return None, None, None, None
 
-# Initialize session state
 def init_session_state():
-    """Initialize session state variables"""
     defaults = {
         'trading_mode': 'virtual',
         'selected_symbol': 'BTCUSDT',
         'position_size': 0.01,
-        'leverage': 10,  # Matches signals.py
+        'leverage': 10,
         'log_level': 'INFO',
         'last_refresh': datetime.now().timestamp()
     }
-
     for key, default_value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = default_value

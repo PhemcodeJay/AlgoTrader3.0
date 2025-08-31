@@ -1,14 +1,50 @@
+from typing import Dict, Any
+import portalocker
 import streamlit as st
 import os
 import json
 import logging
+from bybit_client import BybitClient
 from utils import format_currency_safe
-from db import db_manager
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
-def show_settings(db):
+SETTINGS_FILE = "settings.json"
+
+def load_settings() -> Dict[str, Any]:
+    default_settings = {
+        "SCAN_INTERVAL": 3600,
+        "TOP_N_SIGNALS": 5,
+        "MAX_LOSS_PCT": -15.0,
+        "TP_PERCENT": 0.15,
+        "SL_PERCENT": 0.05,
+        "LEVERAGE": 10,
+        "RISK_PCT": 0.01,
+        "VIRTUAL_BALANCE": 100.0,
+        "ENTRY_BUFFER_PCT": 0.002
+    }
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r") as f:
+                settings = json.load(f)
+            # Merge with defaults
+            for key, value in default_settings.items():
+                if key not in settings:
+                    settings[key] = value
+            return settings
+        return default_settings
+    except Exception as e:
+        logger.warning(f"Error loading settings.json: {e}")
+        return default_settings
+
+def save_settings(settings: Dict[str, Any]):
+    with open(SETTINGS_FILE, "w") as f:
+        portalocker.lock(f, portalocker.LOCK_EX)
+        json.dump(settings, f, indent=4)
+        portalocker.unlock(f)
+
+def show_settings(db, client: BybitClient, trading_mode: str):
     """Application settings with tabs and card-based layout"""
     st.title("⚙️ Settings")
 
@@ -68,118 +104,143 @@ def show_settings(db):
         .stButton > button[kind="primary"]:hover {
             background: linear-gradient(45deg, #34d399, #6ee7b7);
         }
-        .stMetric {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 5px 0;
-        }
-        .stMetric > div {
-            font-size: 1.2rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .stSelectbox, .stNumberInput {
-            background: #3b3b5e;
-            border-radius: 8px;
-            padding: 5px;
-        }
         </style>
     """, unsafe_allow_html=True)
 
-    if not db:
-        st.error("Database connection not available")
-        return
-
     try:
-        # Define tabs
-        params_tab, balance_tab = st.tabs(["Trading Parameters", "Virtual Balance"])
+        settings = load_settings()
+        tabs = ["Account", "Trading Parameters"]
+        account_tab, trading_tab = st.tabs(tabs)
 
-        # Trading Parameters tab
-        with params_tab:
-            with st.container(border=True):
+        with account_tab:
+            with st.container():
+                st.markdown("### Account Settings")
+                st.write(f"**Trading Mode**: {trading_mode.capitalize()}")
+                if trading_mode == "real":
+                    if client.is_connected():
+                        balance = client.get_wallet_balance()
+                        st.write(f"**API Status**: Connected")
+                        st.metric("Account Balance", format_currency_safe(balance.get('capital', 0.0)))
+                        st.info("Real mode balance is managed by Bybit API and cannot be manually updated.")
+                    else:
+                        st.error("⚠️ Real mode selected but API credentials are invalid or missing.")
+                else:
+                    current_balance = client.load_capital("virtual")
+                    st.metric("Virtual Balance", format_currency_safe(current_balance.get('capital', 100.0)))
+                    new_balance = st.number_input(
+                        "Set Virtual Balance (USDT)",
+                        value=current_balance.get('capital', 100.0),
+                        min_value=100.0,
+                        max_value=1_000_000.0,
+                        key="virtual_balance"
+                    )
+                    if st.button("💰 Update Virtual Balance", type="primary", key="update_balance"):
+                        try:
+                            if new_balance < 100:
+                                st.error("Virtual balance must be at least 100 USDT")
+                                return
+                            client.save_capital("virtual", {
+                                "capital": new_balance,
+                                "available": new_balance,
+                                "used": 0.0,
+                                "start_balance": new_balance,
+                                "currency": "USDT"
+                            })
+                            settings["VIRTUAL_BALANCE"] = new_balance
+                            save_settings(settings)
+                            st.success(f"✅ Virtual balance updated to {format_currency_safe(new_balance)}")
+                            st.rerun()
+                        except Exception as e:
+                            logger.error(f"Error updating balance: {e}")
+                            st.error(f"Error updating balance: {e}")
+
+        with trading_tab:
+            with st.container():
                 st.markdown("### Trading Parameters")
-                col1, col2 = st.columns(2)
-                with col1:
-                    scan_interval = st.number_input("Scan Interval (seconds)", value=3600, min_value=60, max_value=86400, key="scan_interval")
-                    max_loss_pct = st.number_input("Max Loss %", value=15.0, min_value=1.0, max_value=100.0, key="max_loss_pct")
-                with col2:
-                    tp_percent = st.number_input("Default TP %", value=3.0, min_value=0.1, max_value=100.0, key="tp_percent")
-                    sl_percent = st.number_input("Default SL %", value=1.5, min_value=0.1, max_value=100.0, key="sl_percent")
-                if st.button("💾 Save Settings", type="primary", key="save_settings"):
-                    try:
-                        st.session_state['trading_params'] = {
-                            "scan_interval": scan_interval,
-                            "max_loss_pct": max_loss_pct,
-                            "tp_percent": tp_percent,
-                            "sl_percent": sl_percent
-                        }
-                        st.success("✅ Settings saved")
-                    except Exception as e:
-                        logger.error(f"Error saving settings: {e}")
-                        st.error(f"Error saving settings: {e}")
-
-        # Virtual Balance tab
-        with balance_tab:
-            with st.container(border=True):
-                st.markdown("### Virtual Balance")
-                current_balance = load_virtual_balance()
-                new_balance = st.number_input(
-                    "Virtual Balance (USDT)",
-                    value=current_balance.get('capital', 1000),
-                    min_value=100.0,
-                    max_value=1_000_000.0,
-                    key="virtual_balance"
+                leverage = st.number_input(
+                    "Leverage",
+                    min_value=1,
+                    max_value=100,
+                    value=settings.get("LEVERAGE", 10),
+                    step=1,
+                    key="leverage"
                 )
-                if st.button("💰 Update Virtual Balance", type="primary", key="update_balance"):
+                risk_pct = st.number_input(
+                    "Risk Percentage per Trade",
+                    min_value=0.001,
+                    max_value=0.1,
+                    value=settings.get("RISK_PCT", 0.01),
+                    step=0.001,
+                    format="%.3f",
+                    key="risk_pct"
+                )
+                tp_percent = st.number_input(
+                    "Take Profit Percentage",
+                    min_value=0.001,
+                    max_value=0.5,
+                    value=settings.get("TP_PERCENT", 0.15),
+                    step=0.001,
+                    format="%.3f",
+                    key="tp_percent"
+                )
+                sl_percent = st.number_input(
+                    "Stop Loss Percentage",
+                    min_value=0.001,
+                    max_value=0.5,
+                    value=settings.get("SL_PERCENT", 0.05),
+                    step=0.001,
+                    format="%.3f",
+                    key="sl_percent"
+                )
+                entry_buffer_pct = st.number_input(
+                    "Entry Buffer Percentage",
+                    min_value=0.001,
+                    max_value=0.1,
+                    value=settings.get("ENTRY_BUFFER_PCT", 0.002),
+                    step=0.001,
+                    format="%.3f",
+                    key="entry_buffer_pct"
+                )
+                scan_interval = st.number_input(
+                    "Scan Interval (seconds)",
+                    min_value=60,
+                    max_value=86400,
+                    value=settings.get("SCAN_INTERVAL", 3600),
+                    step=60,
+                    key="scan_interval"
+                )
+                top_n_signals = st.number_input(
+                    "Top N Signals",
+                    min_value=1,
+                    max_value=50,
+                    value=settings.get("TOP_N_SIGNALS", 5),
+                    step=1,
+                    key="top_n_signals"
+                )
+                max_loss_pct = st.number_input(
+                    "Max Loss Percentage",
+                    min_value=-50.0,
+                    max_value=-0.1,
+                    value=settings.get("MAX_LOSS_PCT", -15.0),
+                    step=0.1,
+                    key="max_loss_pct"
+                )
+                if st.button("💾 Save Trading Parameters", type="primary", key="save_params"):
                     try:
-                        if new_balance < 100:
-                            st.error("Virtual balance must be at least 100 USDT")
-                            return
-                        update_virtual_balance(new_balance)
-                        st.success(f"✅ Virtual balance updated to ${format_currency_safe(new_balance)}")
-                        st.rerun()
+                        settings["LEVERAGE"] = leverage
+                        settings["RISK_PCT"] = risk_pct
+                        settings["TP_PERCENT"] = tp_percent
+                        settings["SL_PERCENT"] = sl_percent
+                        settings["ENTRY_BUFFER_PCT"] = entry_buffer_pct
+                        settings["SCAN_INTERVAL"] = scan_interval
+                        settings["TOP_N_SIGNALS"] = top_n_signals
+                        settings["MAX_LOSS_PCT"] = max_loss_pct
+                        save_settings(settings)
+                        st.success("✅ Trading parameters saved")
                     except Exception as e:
-                        logger.error(f"Error updating balance: {e}")
-                        st.error(f"Error updating balance: {e}")
+                        logger.error(f"Error saving parameters: {e}")
+                        st.error(f"Error saving parameters: {e}")
 
     except Exception as e:
         logger.error(f"Error in settings: {e}")
         st.error(f"Settings error: {e}")
-
-def load_virtual_balance():
-    """Load virtual balance from file"""
-    try:
-        if os.path.exists("capital.json") and os.access("capital.json", os.R_OK):
-            with open("capital.json", "r") as f:
-                data = json.load(f)
-                return data.get("virtual", {"capital": 1000, "available": 1000})
-        return {"capital": 1000, "available": 1000}
-    except Exception as e:
-        logger.warning(f"Error loading virtual balance: {e}")
-        return {"capital": 1000, "available": 1000}
-
-def update_virtual_balance(new_balance):
-    """Update virtual balance in file"""
-    try:
-        capital_data = load_virtual_balance()
-        capital_data.update({
-            "capital": new_balance,
-            "available": new_balance,
-            "start_balance": new_balance
-        })
-        if os.path.exists("capital.json") and os.access("capital.json", os.R_OK):
-            with open("capital.json", "r") as f:
-                full_data = json.load(f)
-        else:
-            full_data = {"real": {}, "virtual": {}}
-        full_data["virtual"] = capital_data
-        with open("capital.json", "w") as f:
-            json.dump(full_data, f, indent=4)
-    except Exception as e:
-        logger.error(f"Error updating virtual balance: {e}")
-        raise
-
-# Run the app
-show_settings(db_manager)
