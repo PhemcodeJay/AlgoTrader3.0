@@ -308,3 +308,7 @@ DETAIL:  Failing row contains (15, DOGEUSDT, Buy, 75, 0.2, null, null, null, 10,
 [SQL: INSERT INTO trades (symbol, side, qty, entry_price, exit_price, stop_loss, take_profit, leverage, margin_usdt, pnl, timestamp, status, order_id, unrealized_pnl, virtual, strategy, score) VALUES (%(symbol)s, %(side)s, %(qty)s, %(entry_price)s, %(exit_price)s, %(stop_loss)s, %(take_profit)s, %(leverage)s, %(margin_usdt)s, %(pnl)s, %(timestamp)s, %(status)s, %(order_id)s, %(unrealized_pnl)s, %(virtual)s, %(strategy)s, %(score)s) RETURNING trades.id]
 [parameters: {'symbol': 'DOGEUSDT', 'side': 'Buy', 'qty': 75.0, 'entry_price': 0.2, 'exit_price': None, 'stop_loss': None, 'take_profit': None, 'leverage': 10, 'margin_usdt': 15, 'pnl': None, 'timestamp': '2025-08-31T07:15:46.977910+00:00', 'status': 'error', 'order_id': None, 'unrealized_pnl': 0.0, 'virtual': False, 'strategy': 'Fallback Demo', 'score': 0}]
 (Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-31 11:28:00,136 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:28:00,155 - settings - INFO - Successfully loaded settings from settings.json
+2025-08-31 11:28:00,156 - engine - INFO - [Engine] Initializing TradingEngine...
+2025-08-31 11:28:00,156 - bybit_client - WARNING - ⚠️ No API credentials or pybit not available, running in virtual mode
