@@ -857,3 +857,25 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 2025-09-02 00:40:22,715 - INFO - Database initialized successfully
 2025-09-02 00:40:22,769 - INFO - [Engine] Initializing TradingEngine...
 2025-09-02 00:40:22,788 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 00:40:26,874 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:40:27,093 - ERROR - 🚨 Error fetching trades (symbol=None): float() argument must be a string or a real number, not 'NoneType'
+2025-09-02 00:40:29,828 - ERROR - 🚨 Error fetching trades (symbol=None): float() argument must be a string or a real number, not 'NoneType'
+2025-09-02 00:40:30,450 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 00:40:30,537 - INFO - [ML] ✅ Loaded 47 total training records from DB.
+2025-09-02 00:40:31,252 - INFO - [ML] ✅ Loaded 47 total training records from DB.
+2025-09-02 00:40:56,176 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:41:00,311 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:41:15,879 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:41:15,916 - ERROR - Error displaying trades table: 'Trade' object has no attribute 'get'
+2025-09-02 00:43:01,963 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:43:02,291 - INFO - Database initialized successfully
+2025-09-02 00:43:09,083 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:43:09,359 - ERROR - Error displaying trades table: 'Trade' object has no attribute 'get'
+2025-09-02 00:47:27,032 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:47:29,165 - INFO - Database initialized successfully
+2025-09-02 00:48:27,457 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:48:28,639 - INFO - Database initialized successfully
+2025-09-02 00:48:52,246 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:48:53,361 - INFO - Database initialized successfully
+2025-09-02 00:48:53,471 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:48:55,755 - INFO - Database initialized successfully
