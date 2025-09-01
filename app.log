@@ -783,3 +783,4 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 2025-08-31 22:34:34,881 - engine - INFO - Executed signal: ETHUSDT | Side: Buy | Qty: 0.0033333333333333335 | Virtual: False
 2025-08-31 22:34:34,937 - db - INFO - Trade added to DB
 2025-08-31 22:34:34,938 - engine - INFO - Executed signal: DOGEUSDT | Side: Buy | Qty: 75.0 | Virtual: False
+2025-09-01 23:29:34,447 - INFO - Database initialized successfully

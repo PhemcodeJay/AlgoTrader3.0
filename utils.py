@@ -10,6 +10,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 import streamlit as st
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -39,6 +40,21 @@ MIN_ATR_PCT = float(os.getenv("MIN_ATR_PCT", 0.001))
 RSI_ZONE = tuple(map(int, os.getenv("RSI_ZONE", "20,80").split(",")))
 INTERVALS = os.getenv("INTERVALS", "15,60,240").split(",")
 MAX_SYMBOLS = int(os.getenv("MAX_SYMBOLS", 50))
+
+BASE_URL = "https://api.bybit.com"  # You can change this to testnet if needed
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+def get_current_price(symbol: str) -> float:
+    try:
+        url = f"{BASE_URL}/v5/market/tickers?category=linear&symbol={symbol}"
+        response = requests.get(url).json()
+        if response.get("retCode") == 0:
+            return float(response["result"]["list"][0]["lastPrice"])
+        logger.error(f"Error getting price for {symbol}: {response.get('retMsg')}")
+        return 0.0
+    except Exception as e:
+        logger.error(f"Exception getting price for {symbol}: {e}")
+        return 0.0
 
 def get_candles(symbol: str, interval: str, limit: int = 100) -> List[Dict]:
     try:
