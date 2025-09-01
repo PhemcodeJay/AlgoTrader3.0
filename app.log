@@ -835,3 +835,12 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 2025-09-02 00:26:42,700 - INFO - Database initialized successfully
 2025-09-02 00:26:42,708 - INFO - [Engine] Initializing TradingEngine...
 2025-09-02 00:26:44,427 - ERROR - Error displaying trades table: 'Trade' object has no attribute 'get'
+2025-09-02 00:31:43,922 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:31:44,850 - INFO - Database initialized successfully
+2025-09-02 00:31:44,881 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:31:44,976 - ERROR - 🚨 Error fetching trades (symbol=None): float() argument must be a string or a real number, not 'NoneType'
+2025-09-02 00:31:47,009 - ERROR - 🚨 Error fetching trades (symbol=None): float() argument must be a string or a real number, not 'NoneType'
+2025-09-02 00:35:34,892 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:35:51,850 - INFO - Database initialized successfully
+2025-09-02 00:35:55,030 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 00:35:55,081 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
