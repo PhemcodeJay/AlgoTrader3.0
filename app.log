@@ -879,3 +879,18 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 2025-09-02 00:48:53,361 - INFO - Database initialized successfully
 2025-09-02 00:48:53,471 - INFO - Successfully loaded settings from settings.json
 2025-09-02 00:48:55,755 - INFO - Database initialized successfully
+2025-09-02 00:52:04,258 - INFO - Successfully loaded settings from settings.json
+2025-09-02 00:52:11,198 - INFO - Database initialized successfully
+2025-09-02 00:55:28,377 - ERROR - Critical error in main: Error opening 'logo.png'
+2025-09-02 01:00:09,166 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 01:00:09,166 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 01:00:20,467 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 01:00:20,468 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 01:00:20,572 - INFO - Automated trading system started
+2025-09-02 01:00:20,999 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 01:00:20,999 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 01:01:32,555 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 01:01:32,556 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 01:01:32,584 - INFO - Automated trading system started
+2025-09-02 01:01:33,084 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 01:01:33,085 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
