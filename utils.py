@@ -296,3 +296,19 @@ def display_log_stats(log_file: str, container, refresh_key: str):
     except Exception as e:
         logger.error(f"Error displaying log stats: {e}")
         container.error(f"🚨 Error displaying log stats: {e}")
+
+def get_trades_safe(db_manager, symbol: Optional[str] = None, limit: int = 50) -> List[Dict]:
+    try:
+        if not db_manager:
+            logger.error("❌ No db_manager provided to get_trades_safe")
+            return []
+
+        if symbol:
+            trades = db_manager.get_trades_by_symbol(symbol, limit=limit)
+        else:
+            trades = db_manager.get_recent_trades(limit=limit)
+
+        return trades if trades else []
+    except Exception as e:
+        logger.error(f"🚨 Error fetching trades (symbol={symbol}): {e}")
+        return []
