@@ -98,19 +98,23 @@ class AutomatedTrader:
             return False
 
     def _trading_loop(self):
+        logger.info("Automated trading loop started")
+
         while self.is_running:
             try:
+                # Run engine once to get signals
                 signals = self.engine.run_once()
                 self.stats["signals_generated"] += len(signals)
-                
+
+                # Get balance from client
                 account_balance = self.client.get_account_balance()
-                
+
                 for signal in signals:
                     if not self._validate_sl_tp(signal):
                         self.stats["failed_trades"] += 1
                         continue
 
-                    # Calculate position size based on risk management
+                    # Calculate position size based on risk
                     qty = self._calculate_position_size(
                         signal["entry"],
                         signal["sl"],
@@ -125,32 +129,43 @@ class AutomatedTrader:
                     trade = self.client.place_order(
                         symbol=signal["symbol"],
                         side=signal["side"],
-                        order_type="Limit" if signal["entry"] else "Market",
+                        order_type="Limit" if signal.get("entry") else "Market",
                         qty=qty,
-                        price=signal["entry"],
-                        stop_loss=signal["sl"],
-                        take_profit=signal["tp"]
+                        price=signal.get("entry"),
+                        stop_loss=signal.get("sl"),
+                        take_profit=signal.get("tp"),
                     )
-                    
+
                     if trade:
                         self.stats["trades_executed"] += 1
                         self.stats["successful_trades"] += 1
+                        try:
+                            # If you have a db_manager, you should pass it to AutomatedTrader and use self.db_manager here
+                            # For now, comment out or remove db_manager.add_trade(trade)
+                            pass
+                        except Exception as e:
+                            logger.error(f"Error saving trade: {e}")
                     else:
                         self.stats["failed_trades"] += 1
 
                     # Update success rate
                     total_trades = self.stats["successful_trades"] + self.stats["failed_trades"]
                     self.stats["success_rate"] = (
-                        self.stats["successful_trades"] / total_trades * 100
+                        (self.stats["successful_trades"] / total_trades) * 100
                         if total_trades > 0 else 0.0
                     )
 
+                # Update uptime
                 self._update_uptime()
-                time.sleep(1)  # Prevent excessive CPU usage
+
+                # Prevent excessive CPU usage
+                time.sleep(1)
+
             except Exception as e:
                 logger.error(f"Error in trading loop: {e}")
                 self.stats["failed_trades"] += 1
-                time.sleep(5)  # Wait before retrying on error
+                time.sleep(5)
+
 
     def _update_uptime(self):
         if self.start_time:

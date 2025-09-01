@@ -8,6 +8,9 @@ import json
 from dotenv import load_dotenv
 
 # Pages
+from automated_trader import AutomatedTrader
+from bybit_client import BybitClient
+from engine import TradingEngine
 from pages.dashboard import show_dashboard
 from pages.positions import show_positions
 from pages.orders import show_orders
@@ -35,6 +38,20 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Import and initialize db_manager before usage
+from db import db_manager
+client = BybitClient(...)
+engine = TradingEngine(db_manager, client)
+trader = AutomatedTrader(engine, client)
+
+# Start trading loop in background
+import threading
+threading.Thread(
+    target=trader._trading_loop,
+    args=(db_manager, client, None),  # pass container if UI logging
+    daemon=True
+).start()
 
 # Utility functions
 def format_currency_safe(value: Optional[float]) -> str:
