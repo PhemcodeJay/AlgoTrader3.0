@@ -5,6 +5,8 @@ from datetime import datetime
 from ml import MLFilter
 from utils import format_currency_safe
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
 
 def show_ml(db, engine, client, trading_mode: str):

@@ -5,12 +5,17 @@ import requests
 import sys
 import json
 import argparse
+import logging
 import os
 from dotenv import load_dotenv
 from utils import get_candles, ema, sma, rsi, bollinger, atr, macd, classify_trend, RISK_PCT, ACCOUNT_BALANCE, LEVERAGE, ENTRY_BUFFER_PCT, MIN_VOLUME, MIN_ATR_PCT, RSI_ZONE, INTERVALS, MAX_SYMBOLS
 from ml import MLFilter
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
+logger = logging.getLogger(__name__)
 
 # Configuration
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")

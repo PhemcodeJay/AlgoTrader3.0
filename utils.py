@@ -13,6 +13,8 @@ import streamlit as st
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 load_dotenv()
+# Configure logging
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
 
 # Load settings with fallbacks from .env
@@ -240,35 +242,47 @@ def get_ticker_snapshot() -> List[Dict]:
         logger.error(f"Error getting ticker snapshot: {e}")
         return []
 
-def display_trades_table(trades: List, container, client, max_trades: int = 5):
+def display_trades_table(trades: List[Dict], container, client=None, max_trades: int = 5):
+    """
+    Display trades in a Streamlit dataframe.
+    Accepts trades as dictionaries from get_trades_safe.
+    """
     try:
         if not trades:
             container.info("🌙 No trades to display")
             return
+
         trades_data = []
         for trade in trades[:max_trades]:
-            symbol = getattr(trade, 'symbol', 'N/A')
-            current_price = client.get_current_price(symbol) if client and hasattr(client, 'get_current_price') else 0.0
-            qty = float(getattr(trade, 'qty', 0))
-            entry_price = float(getattr(trade, 'entry_price', 0))
-            side = getattr(trade, 'side', 'Buy')
-            unreal_pnl = (current_price - entry_price) * qty if side in ["Buy", "LONG"] else (entry_price - current_price) * qty
+            symbol = trade.get("symbol", "N/A")
+            current_price = client.get_current_price(symbol) if client and hasattr(client, "get_current_price") else 0.0
+            qty = float(trade.get("qty", 0))
+            entry_price = float(trade.get("entry_price", 0))
+            side = trade.get("side", "Buy")
+            
+            # Unrealized PnL calculation
+            unreal_pnl = (current_price - entry_price) * qty if side.upper() in ["BUY", "LONG"] else (entry_price - current_price) * qty
+            
             trades_data.append({
                 "Symbol": symbol,
                 "Side": side,
                 "Entry": f"${format_price_safe(entry_price)}",
-                "P&L": f"${format_currency_safe(unreal_pnl if getattr(trade, 'status', '').lower() == 'open' else getattr(trade, 'pnl', 0))}",
-                "Status": getattr(trade, 'status', 'N/A').title(),
-                "Mode": "Virtual" if getattr(trade, 'virtual', True) else "Real"
+                "P&L": f"${format_currency_safe(unreal_pnl if trade.get('status', '').lower() == 'open' else trade.get('pnl', 0))}",
+                "Status": trade.get("status", "N/A").title(),
+                "Mode": "Virtual" if trade.get("virtual", True) else "Real",
+                "Timestamp": trade.get("timestamp", "N/A")
             })
+
         if trades_data:
             df = pd.DataFrame(trades_data)
             container.dataframe(df, use_container_width=True, height=300)
         else:
             container.info("🌙 No trade data to display")
+
     except Exception as e:
         logger.error(f"Error displaying trades table: {e}")
         container.error(f"🚨 Error displaying trades")
+
 
 def display_log_stats(log_file: str, container, refresh_key: str):
     try:
@@ -298,17 +312,40 @@ def display_log_stats(log_file: str, container, refresh_key: str):
         container.error(f"🚨 Error displaying log stats: {e}")
 
 def get_trades_safe(db_manager, symbol: Optional[str] = None, limit: int = 50) -> List[Dict]:
+    """
+    Safely fetch trades from the database using db_manager.get_trades.
+    Converts Trade model instances into dictionaries with human-readable timestamp.
+    Returns an empty list if anything goes wrong.
+    """
     try:
-        if not db_manager:
-            logger.error("❌ No db_manager provided to get_trades_safe")
+        if not db_manager or not hasattr(db_manager, "get_trades"):
+            logger.error("❌ db_manager has no method 'get_trades'")
             return []
 
-        if symbol:
-            trades = db_manager.get_trades_by_symbol(symbol, limit=limit)
-        else:
-            trades = db_manager.get_recent_trades(limit=limit)
+        trades = db_manager.get_trades(symbol=symbol, limit=limit)
+        if not trades:
+            return []
 
-        return trades if trades else []
+        trade_dicts = []
+        for t in trades:
+            timestamp = getattr(t, "timestamp", None)
+            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S") if timestamp else "N/A"
+
+            trade_dicts.append({
+                "id": getattr(t, "id", None),
+                "symbol": getattr(t, "symbol", "N/A"),
+                "side": getattr(t, "side", "N/A"),
+                "qty": float(getattr(t, "qty", 0) or 0),
+                "entry_price": float(getattr(t, "entry_price", 0) or 0),
+                "exit_price": float(getattr(t, "exit_price", 0) or 0),
+                "pnl": float(getattr(t, "pnl", 0) or 0),
+                "status": getattr(t, "status", "N/A"),
+                "timestamp": timestamp_str,
+                "virtual": getattr(t, "virtual", True),
+            })
+
+        return trade_dicts
+
     except Exception as e:
         logger.error(f"🚨 Error fetching trades (symbol={symbol}): {e}")
         return []

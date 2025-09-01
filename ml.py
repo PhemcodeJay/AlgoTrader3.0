@@ -7,6 +7,8 @@ from sklearn.model_selection import train_test_split
 from dotenv import load_dotenv
 import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
 
 load_dotenv()

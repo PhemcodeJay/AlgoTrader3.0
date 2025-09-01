@@ -14,6 +14,8 @@ from sqlalchemy.orm import (
 from sqlalchemy import update
 import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
 
 load_dotenv()

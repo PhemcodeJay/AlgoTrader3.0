@@ -13,8 +13,15 @@ import pandas as pd
 from utils import format_currency_safe, display_trades_table
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, filename="automation.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
+
+st.session_state.trading_mode = st.radio(
+    "Select Trading Mode:",
+    options=["virtual", "real"],
+    index=0  # default = virtual
+)
+
 
 class AutomatedTrader:
     def __init__(self, engine):
@@ -140,7 +147,7 @@ def show_automation(automated_trader, db, engine, client, trading_mode: str):
         with st.container(border=True):
             st.markdown("### Automation Logs")
             try:
-                log_file = "automation.log"
+                log_file = "app.log"
                 if os.path.exists(log_file) and os.access(log_file, os.R_OK):
                     with open(log_file, "r", encoding="utf-8") as f:
                         lines = f.readlines()

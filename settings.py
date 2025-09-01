@@ -5,6 +5,8 @@ from typing import Dict, Any
 from dotenv import load_dotenv
 
 load_dotenv()
+# Configure logging
+logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 logger = logging.getLogger(__name__)
 
 def load_settings() -> Dict[str, Any]:
