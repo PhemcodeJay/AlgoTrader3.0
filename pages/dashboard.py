@@ -11,13 +11,42 @@ from utils import format_price_safe, format_currency_safe, display_trades_table,
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
 
-def get_trades_safe(db, limit: int = 50) -> List:
+def get_trades_safe(db, symbol: Optional[str] = None, limit: int = 50) -> List[Dict]:
+    """
+    Safely fetch trades from the database and normalize them into dicts.
+    Filters out unwanted meme-coins.
+    """
     try:
-        trades = db.get_trades(limit=limit) or []
-        return [t for t in trades if getattr(t, 'symbol', 'N/A') not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]]
+        if not db or not hasattr(db, "get_trades"):
+            logger.error("❌ db has no method 'get_trades'")
+            return []
+
+        trades = db.get_trades(symbol=symbol, limit=limit) or []
+
+        # Normalize to dict
+        normalized = []
+        for t in trades:
+            if getattr(t, "symbol", "N/A") in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"]:
+                continue
+
+            normalized.append({
+                "id": getattr(t, "id", None),
+                "symbol": getattr(t, "symbol", "N/A"),
+                "side": getattr(t, "side", "Buy"),
+                "qty": float(getattr(t, "qty", 0)),
+                "entry_price": float(getattr(t, "entry_price", 0)),
+                "pnl": float(getattr(t, "pnl", 0)),
+                "status": getattr(t, "status", "N/A"),
+                "virtual": getattr(t, "virtual", True),
+                "timestamp": str(getattr(t, "timestamp", "")),
+            })
+
+        return normalized
+
     except Exception as e:
-        logger.error(f"Error getting trades: {e}")
+        logger.error(f"🚨 Error fetching trades (symbol={symbol}): {e}")
         return []
+
 
 def show_dashboard(db, engine, client, trading_mode: str):
     st.title("📈 Dashboard")

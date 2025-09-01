@@ -10,7 +10,7 @@ from engine import TradingEngine
 from db import db_manager
 from ml import MLFilter
 import pandas as pd
-from utils import format_currency_safe, display_trades_table
+from utils import format_currency_safe, display_trades_table, get_trades_safe
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
@@ -62,14 +62,25 @@ class AutomatedTrader:
             self.thread.join(timeout=5)
         logger.info("Automated trading system stopped")
 
-    def _trading_loop(self, trading_mode: str):
+    def _trading_loop(self, trading_mode: str, db_manager, client, container):
+        """
+        Main trading loop:
+        - Generates signals
+        - Executes trades
+        - Saves to DB
+        - Updates Streamlit trades table
+        """
         logger.info("Trading loop started")
         while self.is_running:
             try:
+                # === Run signals ===
                 signals = self.engine.run_once(trading_mode=trading_mode)
                 if self.ml_filter:
                     signals = [self.ml_filter.enhance_signal(signal, trading_mode) for signal in signals]
+
                 self.stats["signals_generated"] += len(signals)
+
+                # === Execute trades ===
                 for signal in signals:
                     trade = self.engine.execute_signal(signal, trading_mode)
                     if trade:
@@ -78,13 +89,26 @@ class AutomatedTrader:
                             db_manager.add_trade(trade)
                         except Exception as e:
                             logger.error(f"Error saving trade to database: {e}")
+
+                # === Refresh trades in UI ===
+                try:
+                    trades = get_trades_safe(db_manager, limit=10)
+                    display_trades_table(trades, container, client, max_trades=5)
+                except Exception as e:
+                    logger.error(f"Error refreshing trades table: {e}")
+
+                # === Update stats ===
                 trade_stats = self.engine.get_trade_statistics()
                 self.stats["success_rate"] = trade_stats.get("win_rate", 0.0)
                 self._update_uptime()
+
+                # Wait until next cycle
                 time.sleep(60)
+
             except Exception as e:
                 logger.error(f"Error in trading loop: {e}")
                 time.sleep(30)
+
 
     def _update_uptime(self):
         if self.start_time:
