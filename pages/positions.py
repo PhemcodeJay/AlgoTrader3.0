@@ -18,14 +18,28 @@ def get_current_price_safe(symbol: str, client: BybitClient) -> float:
         logger.error(f"Error getting price for {symbol}: {e}")
         return 0.0
 
+
 def get_open_trades_safe(db, trading_mode: str) -> List:
     try:
-        is_virtual = trading_mode == "virtual"
+        is_virtual = (trading_mode.lower() == "virtual")
+
         trades = db.get_open_trades() or []
-        return [t for t in trades if getattr(t, 'symbol', 'N/A') not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"] and getattr(t, 'virtual', True) == is_virtual]
+
+        filtered = []
+        for t in trades:
+            symbol = getattr(t, "symbol", "N/A")
+            is_virtual_trade = getattr(t, "virtual", True)
+
+            if symbol not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"] \
+               and is_virtual_trade == is_virtual:
+                filtered.append(t)
+
+        return filtered
+
     except Exception as e:
-        logger.error(f"Error getting open trades: {e}")
+        logger.error(f"🚨 Error getting open trades (mode={trading_mode}): {e}")
         return []
+
 
 def show_positions(db, engine, client, trading_mode: str):
     st.title("📊 Positions")

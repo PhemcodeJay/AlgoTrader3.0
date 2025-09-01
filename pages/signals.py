@@ -145,9 +145,20 @@ def display_signals(signals: List[Dict], container, title: str, page: int = 1, p
     else:
         container.info(f"🌙 No {title.lower()} to display")
 
+
 def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: str):
     st.title("📡 Signals")
-    generator_tab, all_tab, buy_tab, sell_tab = st.tabs(["⚙️ Generator", "All Signals", "Buy Signals", "Sell Signals"])
+
+    PAGE_SIZE = 10  # number of signals per page
+
+    # Ensure session state keys exist
+    for key in ["all_signals_page", "buy_signals_page", "sell_signals_page"]:
+        if key not in st.session_state:
+            st.session_state[key] = 1
+
+    generator_tab, all_tab, buy_tab, sell_tab = st.tabs(
+        ["⚙️ Generator", "All Signals", "Buy Signals", "Sell Signals"]
+    )
 
     with generator_tab:
         st.subheader("Generate Signals")
@@ -159,23 +170,51 @@ def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: s
                 if signals:
                     for signal in signals:
                         db.add_signal(signal)
-                    st.success(f"Generated {len(signals)} signals")
+                    st.success(f"✅ Generated {len(signals)} signals")
                 else:
-                    st.warning("No signals generated")
+                    st.warning("⚠️ No signals generated")
 
-    # Fetch signals from DB
-    db_signals = db.get_signals()
+    # Fetch signals from DB safely
+    try:
+        db_signals = db.get_signals() or []
+    except Exception as e:
+        st.error(f"Error fetching signals: {e}")
+        db_signals = []
 
+    # --- Pagination helper ---
+    def pagination_controls(label: str, page_key: str, items: list):
+        total_pages = max(1, (len(items) + PAGE_SIZE - 1) // PAGE_SIZE)
+        col1, col2, col3 = st.columns([1, 2, 1])
+
+        with col1:
+            if st.button("⬅️ Prev", key=f"{label}_prev"):
+                if st.session_state[page_key] > 1:
+                    st.session_state[page_key] -= 1
+
+        with col2:
+            st.markdown(f"<p style='text-align:center;'>Page {st.session_state[page_key]} of {total_pages}</p>", unsafe_allow_html=True)
+
+        with col3:
+            if st.button("Next ➡️", key=f"{label}_next"):
+                if st.session_state[page_key] < total_pages:
+                    st.session_state[page_key] += 1
+
+    # --- All signals ---
     with all_tab:
-        display_signals(db_signals, st, "All Signals", st.session_state.all_signals_page)
+        display_signals(db_signals, st, "All Signals", st.session_state.all_signals_page, PAGE_SIZE)
+        pagination_controls("all", "all_signals_page", db_signals)
 
+    # --- Buy signals ---
     with buy_tab:
-        buy_signals = [s for s in db_signals if s["side"] == "Buy"]
-        display_signals(buy_signals, st, "Buy Signals", st.session_state.buy_signals_page)
+        buy_signals = [s for s in db_signals if s.get("side") == "Buy"]
+        display_signals(buy_signals, st, "Buy Signals", st.session_state.buy_signals_page, PAGE_SIZE)
+        pagination_controls("buy", "buy_signals_page", buy_signals)
 
+    # --- Sell signals ---
     with sell_tab:
-        sell_signals = [s for s in db_signals if s["side"] == "Sell"]
-        display_signals(sell_signals, st, "Sell Signals", st.session_state.sell_signals_page)
+        sell_signals = [s for s in db_signals if s.get("side") == "Sell"]
+        display_signals(sell_signals, st, "Sell Signals", st.session_state.sell_signals_page, PAGE_SIZE)
+        pagination_controls("sell", "sell_signals_page", sell_signals)
 
     if st.button("🔄 Refresh Signals"):
         st.rerun()
