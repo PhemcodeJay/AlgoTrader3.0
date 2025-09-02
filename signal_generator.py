@@ -10,6 +10,7 @@ import os
 from dotenv import load_dotenv
 from utils import get_candles, ema, sma, rsi, bollinger, atr, macd, classify_trend, RISK_PCT, ACCOUNT_BALANCE, LEVERAGE, ENTRY_BUFFER_PCT, MIN_VOLUME, MIN_ATR_PCT, RSI_ZONE, INTERVALS, MAX_SYMBOLS
 from ml import MLFilter
+from io import BytesIO
 
 load_dotenv()
 
@@ -71,6 +72,16 @@ class SignalPDF(FPDF):
             self.set_text_color(0, 0, 0)
             self.cell(0, 4, "=" * 57, ln=1)
             self.ln(1)
+
+def generate_pdf_bytes(signals):
+    """Generate a PDF in memory and return as bytes"""
+    if not signals:
+        return None
+    pdf = SignalPDF()
+    pdf.add_page()
+    pdf.add_signals(signals[:20])
+    buffer = BytesIO()
+    return buffer.getvalue()
 
 # Formatter
 def format_signal_block(s):
