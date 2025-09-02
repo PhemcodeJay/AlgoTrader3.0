@@ -1,9 +1,8 @@
 import streamlit as st
 import logging
 from datetime import datetime, timezone
-from typing import List, Dict
+from typing import List, Dict, Sequence
 from bybit_client import BybitClient
-import db
 from engine import TradingEngine
 from db import db_manager
 import pandas as pd
@@ -26,12 +25,12 @@ MAX_SYMBOLS = 50
 RSI_PERIOD = 14
 ATR_PERIOD = 14
 
-from typing import Sequence
-
 def calculate_rsi(prices: np.ndarray, period: int = RSI_PERIOD) -> float:
     """Calculate RSI from price series"""
     try:
         prices = np.array(prices)
+        if len(prices) < period + 1:
+            return 50.0  # Neutral fallback if insufficient data
         deltas = np.diff(prices)
         gains = np.where(deltas > 0, deltas, 0)
         losses = np.where(deltas < 0, -deltas, 0)
@@ -51,6 +50,8 @@ def calculate_rsi(prices: np.ndarray, period: int = RSI_PERIOD) -> float:
 def calculate_atr(highs: List[float], lows: List[float], closes: List[float], period: int = ATR_PERIOD) -> float:
     """Calculate ATR from high, low, and close prices"""
     try:
+        if len(closes) < period + 1:
+            return 0.0  # Insufficient data
         trs = []
         for i in range(1, len(closes)):
             high_low = highs[i] - lows[i]
@@ -72,18 +73,21 @@ def generate_signals(client: BybitClient, symbols: Sequence[str], interval: str 
         signals = []
         for symbol in symbols:
             # Fetch kline data (last 200 candles for sufficient history)
-            # Use the correct method to fetch kline data from BybitClient
             kline_data = client.get_kline(symbol=symbol, interval=interval, limit=200)
             if not kline_data or len(kline_data) < RSI_PERIOD + 1:
                 logger.warning(f"Insufficient kline data for {symbol}")
                 continue
 
-            # Extract prices
-            closes = [float(k['close']) for k in kline_data]
-            highs = [float(k['high']) for k in kline_data]
-            lows = [float(k['low']) for k in kline_data]
-            current_price = closes[-1] if closes else 0.0
+            # Extract prices (validate kline_data format)
+            try:
+                closes = [float(k['close']) for k in kline_data]
+                highs = [float(k['high']) for k in kline_data]
+                lows = [float(k['low']) for k in kline_data]
+            except (KeyError, TypeError, ValueError) as e:
+                logger.warning(f"Invalid kline data format for {symbol}: {e}")
+                continue
 
+            current_price = closes[-1] if closes else 0.0
             if current_price == 0.0:
                 logger.warning(f"Invalid price data for {symbol}")
                 continue
@@ -110,7 +114,7 @@ def generate_signals(client: BybitClient, symbols: Sequence[str], interval: str 
             else:
                 continue
 
-            qty = (ACCOUNT_BALANCE * RISK_PCT * LEVERAGE) / entry
+            qty = (ACCOUNT_BALANCE * RISK_PCT * LEVERAGE) / entry if entry > 0 else 0
             signals.append({
                 "symbol": symbol,
                 "side": side,
@@ -127,6 +131,7 @@ def generate_signals(client: BybitClient, symbols: Sequence[str], interval: str 
         return []
 
 def display_signals(signals: List[Dict], container, title: str, page: int = 1, page_size: int = 10):
+    """Display signals in a paginated table"""
     if not signals:
         container.info(f"🌙 No {title.lower()} to display")
         return
@@ -149,11 +154,11 @@ def display_signals(signals: List[Dict], container, title: str, page: int = 1, p
     else:
         container.info(f"🌙 No {title.lower()} to display")
 
-
 def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: str):
+    """Display the signals page with signal generation and viewing tabs"""
     st.title("📡 Signals")
 
-    PAGE_SIZE = 10  # number of signals per page
+    PAGE_SIZE = 10  # Number of signals per page
 
     # Ensure session state keys exist
     for key in ["all_signals_page", "buy_signals_page", "sell_signals_page"]:
@@ -166,22 +171,35 @@ def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: s
 
     with generator_tab:
         st.subheader("Generate Signals")
-        symbols = st.multiselect("Select Symbols", client.get_symbols(), default=["BTCUSDT", "ETHUSDT"])
-        interval = st.selectbox("Interval", INTERVALS, index=1)
-        if st.button("Generate Signals"):
+        # Get available symbols and validate defaults
+        available_symbols = client.get_symbols()
+        default_symbols = ["BTCUSDT", "ETHUSDT"]
+        valid_defaults = [s for s in default_symbols if s in available_symbols]
+        if not available_symbols:
+            st.warning("⚠️ No symbols available from Bybit. Check API connection or credentials.")
+            symbols = []
+        else:
+            symbols = st.multiselect(
+                "Select Symbols",
+                available_symbols,
+                default=valid_defaults if valid_defaults else [available_symbols[0]] if available_symbols else [],
+                key="signals_symbols"
+            )
+        interval = st.selectbox("Interval", INTERVALS, index=1, key="signals_interval")
+        if st.button("Generate Signals", key="generate_signals"):
             with st.spinner("Generating..."):
-                # Ensure symbols is a list of strings
-                if symbols and symbols and isinstance(symbols[0], dict) and "symbol" in symbols[0]:
-                    symbols = [s["symbol"] for s in symbols]
-                elif symbols and isinstance(symbols[0], dict):
-                    symbols = [str(s) for s in symbols]
-                signals = generate_signals(client, [str(s) for s in symbols], interval)
-                if signals:
-                    for signal in signals:
-                        db.add_signal(signal)
-                    st.success(f"✅ Generated {len(signals)} signals")
+                if not symbols:
+                    st.error("🚨 Please select at least one symbol")
                 else:
-                    st.warning("⚠️ No signals generated")
+                    # Ensure symbols is a list of strings
+                    symbol_names = [str(s) for s in symbols]
+                    signals = generate_signals(client, symbol_names, interval)
+                    if signals:
+                        for signal in signals:
+                            db.add_signal(signal)
+                        st.success(f"✅ Generated {len(signals)} signals")
+                    else:
+                        st.warning("⚠️ No signals generated")
 
     # Fetch signals from DB safely
     try:
@@ -190,47 +208,45 @@ def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: s
         st.error(f"Error fetching signals: {e}")
         db_signals = []
 
-    # --- Pagination helper ---
+    # Pagination helper
     def pagination_controls(label: str, page_key: str, items: list):
         total_pages = max(1, (len(items) + PAGE_SIZE - 1) // PAGE_SIZE)
         col1, col2, col3 = st.columns([1, 2, 1])
-
         with col1:
             if st.button("⬅️ Prev", key=f"{label}_prev"):
                 if st.session_state[page_key] > 1:
                     st.session_state[page_key] -= 1
-
         with col2:
             st.markdown(f"<p style='text-align:center;'>Page {st.session_state[page_key]} of {total_pages}</p>", unsafe_allow_html=True)
-
         with col3:
             if st.button("Next ➡️", key=f"{label}_next"):
                 if st.session_state[page_key] < total_pages:
                     st.session_state[page_key] += 1
 
-    # --- All signals ---
+    # All signals
     with all_tab:
         display_signals(db_signals, st, "All Signals", st.session_state.all_signals_page, PAGE_SIZE)
         pagination_controls("all", "all_signals_page", db_signals)
 
-    # --- Buy signals ---
+    # Buy signals
     with buy_tab:
         buy_signals = [s for s in db_signals if s.get("side") == "Buy"]
         display_signals(buy_signals, st, "Buy Signals", st.session_state.buy_signals_page, PAGE_SIZE)
         pagination_controls("buy", "buy_signals_page", buy_signals)
 
-    # --- Sell signals ---
+    # Sell signals
     with sell_tab:
         sell_signals = [s for s in db_signals if s.get("side") == "Sell"]
         display_signals(sell_signals, st, "Sell Signals", st.session_state.sell_signals_page, PAGE_SIZE)
         pagination_controls("sell", "sell_signals_page", sell_signals)
 
-    if st.button("🔄 Refresh Signals"):
+    if st.button("🔄 Refresh Signals", key="refresh_signals"):
         st.rerun()
-        
 
+# Remove module-level execution to avoid running outside app.py navigation
+# The following lines are commented out as they should be handled by app.py
 db = db_manager
 client = BybitClient()
-engine = TradingEngine()  # Create an instance of TradingEngine
-trading_mode = st.session_state.get("trading_mode", "virtual")  # Default to "virtual" if not set
+engine = TradingEngine()
+trading_mode = st.session_state.get("trading_mode", "virtual")
 show_signals(db, engine, client, trading_mode)

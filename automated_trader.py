@@ -9,21 +9,27 @@ from ml import MLFilter
 from dotenv import load_dotenv
 
 load_dotenv()
-# Configure logging
-logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
+logging.basicConfig(
+    level=logging.INFO,
+    filename="app.log",
+    filemode="a",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8"
+)
 logger = logging.getLogger(__name__)
 
 class AutomatedTrader:
     def __init__(self, engine, client: BybitClient, risk_per_trade: float = 0.01):
         self.is_running = False
-        self.thread = None
+        self.threads = []
         self.start_time = None
         self.engine = engine
         self.client = client
         self.ml_filter = MLFilter() if os.getenv("ML_ENABLED", "true").lower() == "true" else None
-        self.risk_per_trade = risk_per_trade  # Risk % per trade (default 1%)
-        self.min_sl_points = float(os.getenv("MIN_SL_POINTS", "10"))  # Minimum stop loss points
-        self.max_sl_points = float(os.getenv("MAX_SL_POINTS", "100"))  # Maximum stop loss points
+        self.risk_per_trade = risk_per_trade
+        self.min_sl_points = float(os.getenv("MIN_SL_POINTS", "10"))
+        self.max_sl_points = float(os.getenv("MAX_SL_POINTS", "100"))
+        self.stats_lock = threading.Lock()
         self.stats = {
             "signals_generated": 0,
             "trades_executed": 0,
@@ -40,8 +46,18 @@ class AutomatedTrader:
         try:
             self.is_running = True
             self.start_time = datetime.now(timezone.utc)
-            self.thread = threading.Thread(target=self._trading_loop, daemon=True)
-            self.thread.start()
+            symbols = os.getenv("SYMBOLS", "BTCUSDT,ETHUSDT,XRPUSDT").split(",")
+            interval = os.getenv("INTERVAL", "60")
+            strategy = os.getenv("STRATEGY", "MACD")
+            for symbol in symbols:
+                thread = threading.Thread(
+                    target=self._trading_loop,
+                    args=(symbol, interval, strategy),
+                    daemon=True
+                )
+                self.threads.append(thread)
+                thread.start()
+                logger.info(f"Started trading thread for {symbol}")
             logger.info("Automated trading system started")
             return True
         except Exception as e:
@@ -54,12 +70,13 @@ class AutomatedTrader:
             logger.warning("Automation is not running")
             return
         self.is_running = False
-        if self.thread and self.thread.is_alive():
-            self.thread.join(timeout=5)
+        for thread in self.threads:
+            if thread.is_alive():
+                thread.join(timeout=5)
+        self.threads = []
         logger.info("Automated trading system stopped")
 
     def _calculate_position_size(self, entry_price: float, stop_loss: float, account_balance: float) -> float:
-        """Calculate position size based on risk per trade and stop loss distance"""
         if not entry_price or not stop_loss:
             return 0.0
         risk_amount = account_balance * self.risk_per_trade
@@ -67,7 +84,6 @@ class AutomatedTrader:
         return risk_amount / stop_distance if stop_distance > 0 else 0.0
 
     def _validate_sl_tp(self, signal: Dict) -> bool:
-        """Validate stop loss and take profit values"""
         try:
             entry = float(signal.get("entry", 0))
             sl = float(signal.get("sl", 0))
@@ -82,7 +98,6 @@ class AutomatedTrader:
                 logger.error(f"Stop loss distance {sl_distance} outside allowed range")
                 return False
 
-            # Ensure TP is in the right direction relative to entry and side
             if signal["side"].lower() == "buy":
                 if not (tp > entry > sl):
                     logger.error("Invalid buy signal: TP must be > entry > SL")
@@ -97,95 +112,123 @@ class AutomatedTrader:
             logger.error(f"Error validating SL/TP: {e}")
             return False
 
-    def _trading_loop(self):
-        logger.info("Automated trading loop started")
+    def _trading_loop(self, symbol: str, interval: str, strategy: str):
+        logger.info(f"Automated trading loop started for {symbol} on {interval} with {strategy}")
 
         while self.is_running:
             try:
-                # Run engine once to get signals
-                signals = self.engine.run_once()
-                self.stats["signals_generated"] += len(signals)
+                trading_mode = "virtual" if self.client.virtual_mode else "real"
+                signals = self.engine.run_once(
+                    trading_mode=trading_mode,
+                    symbol=symbol,
+                    interval=interval,
+                    strategy=strategy
+                )
+                
+                with self.stats_lock:
+                    self.stats["signals_generated"] += len(signals)
 
-                # Get balance from client
-                account_balance = self.client.get_account_balance()
+                account_balance = self.client.get_wallet_balance().get("available", 0.0)
 
                 for signal in signals:
+                    # Enhance and validate signal using MLFilter
+                    if self.ml_filter:
+                        try:
+                            signal = self.ml_filter.enhance_signal(signal, trading_mode)
+                            if signal.get("score", 0.0) < 60.0:
+                                logger.info(f"Signal filtered out by ML for {symbol}: score={signal.get('score')}")
+                                with self.stats_lock:
+                                    self.stats["failed_trades"] += 1
+                                continue
+                        except Exception as e:
+                            logger.error(f"MLFilter enhancement error for {symbol}: {e}")
+                            with self.stats_lock:
+                                self.stats["failed_trades"] += 1
+                            continue
+
                     if not self._validate_sl_tp(signal):
-                        self.stats["failed_trades"] += 1
+                        with self.stats_lock:
+                            self.stats["failed_trades"] += 1
                         continue
 
-                    # Calculate position size based on risk
+                    # Explicitly define price as a float
+                    price = float(signal.get("entry", 0))
+                    if price <= 0:
+                        logger.error(f"Invalid price for signal: {signal}")
+                        with self.stats_lock:
+                            self.stats["failed_trades"] += 1
+                        continue
+
                     qty = self._calculate_position_size(
-                        signal["entry"],
-                        signal["sl"],
-                        account_balance
+                        entry_price=price,
+                        stop_loss=signal["sl"],
+                        account_balance=account_balance
                     )
 
                     if qty <= 0:
                         logger.error(f"Invalid position size for signal: {signal}")
-                        self.stats["failed_trades"] += 1
+                        with self.stats_lock:
+                            self.stats["failed_trades"] += 1
                         continue
 
                     trade = self.client.place_order(
                         symbol=signal["symbol"],
                         side=signal["side"],
-                        order_type="Limit" if signal.get("entry") else "Market",
+                        order_type="Limit" if price else "Market",
                         qty=qty,
-                        price=signal.get("entry"),
+                        price=price,
                         stop_loss=signal.get("sl"),
                         take_profit=signal.get("tp"),
                     )
 
-                    if trade:
-                        self.stats["trades_executed"] += 1
-                        self.stats["successful_trades"] += 1
-                        try:
-                            # If you have a db_manager, you should pass it to AutomatedTrader and use self.db_manager here
-                            # For now, comment out or remove db_manager.add_trade(trade)
-                            pass
-                        except Exception as e:
-                            logger.error(f"Error saving trade: {e}")
-                    else:
-                        self.stats["failed_trades"] += 1
+                    with self.stats_lock:
+                        if trade:
+                            self.stats["trades_executed"] += 1
+                            self.stats["successful_trades"] += 1
+                            try:
+                                self.engine.db.add_trade(trade)
+                            except Exception as e:
+                                logger.error(f"Error saving trade for {symbol}: {e}")
+                        else:
+                            self.stats["failed_trades"] += 1
 
-                    # Update success rate
-                    total_trades = self.stats["successful_trades"] + self.stats["failed_trades"]
-                    self.stats["success_rate"] = (
-                        (self.stats["successful_trades"] / total_trades) * 100
-                        if total_trades > 0 else 0.0
-                    )
+                        total_trades = self.stats["successful_trades"] + self.stats["failed_trades"]
+                        self.stats["success_rate"] = (
+                            (self.stats["successful_trades"] / total_trades) * 100
+                            if total_trades > 0 else 0.0
+                        )
 
-                # Update uptime
                 self._update_uptime()
-
-                # Prevent excessive CPU usage
                 time.sleep(1)
 
             except Exception as e:
-                logger.error(f"Error in trading loop: {e}")
-                self.stats["failed_trades"] += 1
+                logger.error(f"Error in trading loop for {symbol}: {e}")
+                with self.stats_lock:
+                    self.stats["failed_trades"] += 1
                 time.sleep(5)
-
 
     def _update_uptime(self):
         if self.start_time:
             uptime = datetime.now(timezone.utc) - self.start_time
-            self.stats["uptime"] = str(uptime).split(".")[0]
+            with self.stats_lock:
+                self.stats["uptime"] = str(uptime).split(".")[0]
 
     def get_status(self) -> Dict:
-        return {
-            "is_running": self.is_running,
-            "start_time": self.start_time.isoformat() if self.start_time else None,
-            "stats": self.stats.copy()
-        }
+        with self.stats_lock:
+            return {
+                "is_running": self.is_running,
+                "start_time": self.start_time.isoformat() if self.start_time else None,
+                "stats": self.stats.copy()
+            }
 
     def reset_stats(self):
-        self.stats = {
-            "signals_generated": 0,
-            "trades_executed": 0,
-            "successful_trades": 0,
-            "failed_trades": 0,
-            "success_rate": 0.0,
-            "uptime": "0:00:00"
-        }
+        with self.stats_lock:
+            self.stats = {
+                "signals_generated": 0,
+                "trades_executed": 0,
+                "successful_trades": 0,
+                "failed_trades": 0,
+                "success_rate": 0.0,
+                "uptime": "0:00:00"
+            }
         logger.info("Statistics reset")

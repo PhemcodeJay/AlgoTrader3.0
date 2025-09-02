@@ -18,30 +18,27 @@ def get_current_price_safe(symbol: str, client: BybitClient) -> float:
         logger.error(f"Error getting price for {symbol}: {e}")
         return 0.0
 
-
 def get_open_trades_safe(db, trading_mode: str) -> List:
     try:
         is_virtual = (trading_mode.lower() == "virtual")
-
         trades = db.get_open_trades() or []
-
         filtered = []
         for t in trades:
             symbol = getattr(t, "symbol", "N/A")
             is_virtual_trade = getattr(t, "virtual", True)
-
             if symbol not in ["1000000BABYDOGEUSDT", "1000000CHEEMSUSDT", "1000000MOGUSDT"] \
                and is_virtual_trade == is_virtual:
                 filtered.append(t)
-
         return filtered
-
     except Exception as e:
         logger.error(f"🚨 Error getting open trades (mode={trading_mode}): {e}")
         return []
 
-
 def show_positions(db, engine, client, trading_mode: str):
+    # Initialize trading_mode in session_state if not set
+    if 'trading_mode' not in st.session_state:
+        st.session_state.trading_mode = trading_mode  # Default to passed value or set explicitly
+
     st.title("📊 Positions")
     st.markdown("""
         <style>
@@ -53,11 +50,11 @@ def show_positions(db, engine, client, trading_mode: str):
         </style>
     """, unsafe_allow_html=True)
     open_tab, new_tab = st.tabs(["🟢 Open Positions", "➕ New Position"])
-    is_virtual = trading_mode == "virtual"
+    is_virtual = st.session_state.trading_mode == "virtual"
 
     with open_tab:
         st.subheader("🟢 Open Positions")
-        open_trades = get_open_trades_safe(db, trading_mode)
+        open_trades = get_open_trades_safe(db, st.session_state.trading_mode)
         display_trades_table(open_trades, st, client)
         if st.button("🔄 Refresh Positions", key="refresh_positions"):
             st.rerun()
@@ -87,9 +84,9 @@ def show_positions(db, engine, client, trading_mode: str):
                 st.metric("SL", f"${format_price_safe(sl_price)}")
             if st.button("🚀 Open Position", type="primary", key="open_position"):
                 try:
-                    capital_data = client.load_capital(trading_mode)
+                    capital_data = client.load_capital(st.session_state.trading_mode)
                     if margin_usdt > capital_data.get("available", 0.0):
-                        st.error(f"🚨 Insufficient {trading_mode} funds: {margin_usdt} > {capital_data.get('available', 0.0)}")
+                        st.error(f"🚨 Insufficient {st.session_state.trading_mode} funds: {margin_usdt} > {capital_data.get('available', 0.0)}")
                         return
                     if entry_price <= 0 or margin_usdt <= 0 or position_size <= 0:
                         st.error("🚨 Invalid input: Entry price, margin, or position size must be positive")
@@ -131,6 +128,10 @@ def show_positions(db, engine, client, trading_mode: str):
 db = db_manager
 engine = TradingEngine()
 client = engine.client
+
+# Initialize trading_mode if not set
+if 'trading_mode' not in st.session_state:
+    st.session_state.trading_mode = "virtual"  # Default to 'virtual' or your preferred mode
 
 # Run the app
 show_positions(db, engine, client, st.session_state.trading_mode)

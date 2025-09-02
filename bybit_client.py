@@ -128,18 +128,7 @@ class BybitClient:
         limit: int = 200,
         category: str = "linear"
     ) -> List[Dict]:
-        """
-        Fetch historical kline (candlestick) data from Bybit.
-
-        Args:
-            symbol (str): Trading pair symbol (e.g., "BTCUSDT").
-            interval (str): Kline interval ("1","3","5","15","30","60","240","720","D","M","W").
-            limit (int): Number of klines (max 200).
-            category (str): Market type (linear, spot, inverse, option).
-
-        Returns:
-            List[Dict]: OHLCV candles sorted oldest → newest.
-        """
+        
         try:
             url = f"{self.base_url}/v5/market/kline"
             params = {
