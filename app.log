@@ -1063,3 +1063,35 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 2025-09-02 20:44:30,049 - INFO - Automated trading system started
 2025-09-02 20:44:30,334 - INFO - [Engine] Initializing TradingEngine...
 2025-09-02 20:44:30,335 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 21:09:02,055 - INFO - Successfully loaded settings from settings.json
+2025-09-02 21:09:04,990 - INFO - Database initialized successfully
+2025-09-02 21:09:05,164 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 21:09:05,165 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 21:09:18,112 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 21:09:18,112 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 21:09:18,314 - INFO - Trading loop started for BTCUSDT on 60 with MACD
+2025-09-02 21:09:18,314 - INFO - Started trading thread for BTCUSDT
+2025-09-02 21:09:18,314 - ERROR - Error in trading loop for BTCUSDT: TradingEngine.run_once() got an unexpected keyword argument 'symbol'
+2025-09-02 21:09:18,316 - INFO - Trading loop started for ETHUSDT on 60 with MACD
+2025-09-02 21:09:18,328 - INFO - Started trading thread for ETHUSDT
+2025-09-02 21:09:18,328 - ERROR - Error in trading loop for ETHUSDT: TradingEngine.run_once() got an unexpected keyword argument 'symbol'
+2025-09-02 21:09:18,357 - INFO - Trading loop started for XRPUSDT on 60 with MACD
+2025-09-02 21:09:18,358 - INFO - Started trading thread for XRPUSDT
+2025-09-02 21:09:18,358 - ERROR - Error in trading loop for XRPUSDT: TradingEngine.run_once() got an unexpected keyword argument 'symbol'
+2025-09-02 21:09:18,358 - INFO - Automated trading system started
+2025-09-02 21:09:18,543 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 21:09:18,544 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 21:09:20,656 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 21:09:20,656 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
+2025-09-02 21:09:20,684 - INFO - Trading loop started for BTCUSDT on 60 with MACD
+2025-09-02 21:09:20,684 - INFO - Started trading thread for BTCUSDT
+2025-09-02 21:09:20,684 - ERROR - Error in trading loop for BTCUSDT: TradingEngine.run_once() got an unexpected keyword argument 'symbol'
+2025-09-02 21:09:20,689 - INFO - Trading loop started for ETHUSDT on 60 with MACD
+2025-09-02 21:09:20,689 - INFO - Started trading thread for ETHUSDT
+2025-09-02 21:09:20,689 - ERROR - Error in trading loop for ETHUSDT: TradingEngine.run_once() got an unexpected keyword argument 'symbol'
+2025-09-02 21:09:20,691 - INFO - Trading loop started for XRPUSDT on 60 with MACD
+2025-09-02 21:09:20,691 - INFO - Started trading thread for XRPUSDT
+2025-09-02 21:09:20,692 - INFO - Automated trading system started
+2025-09-02 21:09:20,692 - ERROR - Error in trading loop for XRPUSDT: TradingEngine.run_once() got an unexpected keyword argument 'symbol'
+2025-09-02 21:09:20,929 - INFO - [Engine] Initializing TradingEngine...
+2025-09-02 21:09:20,929 - WARNING - [ML] ⚠️ No trained model found. Using fallback scoring.
