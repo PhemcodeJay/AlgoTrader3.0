@@ -6,7 +6,7 @@ from typing import List, Optional, Dict
 from bybit_client import BybitClient
 from engine import TradingEngine
 from db import db_manager
-from utils import format_price_safe, format_currency_safe, display_trades_table, get_trades_safe
+from utils import format_price_safe, format_currency_safe, display_trades_table
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, filename="app.log", filemode="a", format="%(asctime)s - %(levelname)s - %(message)s", encoding="utf-8")
@@ -46,7 +46,6 @@ def get_trades_safe(db, symbol: Optional[str] = None, limit: int = 50) -> List[D
     except Exception as e:
         logger.error(f"🚨 Error fetching trades (symbol={symbol}): {e}")
         return []
-
 
 def show_dashboard(db, engine, client, trading_mode: str):
     st.title("📈 Dashboard")
@@ -113,6 +112,10 @@ def show_dashboard(db, engine, client, trading_mode: str):
 db = db_manager
 engine = TradingEngine()
 client = engine.client
+
+# Initialize trading_mode in session_state if not already set
+if "trading_mode" not in st.session_state:
+    st.session_state.trading_mode = "virtual"  # Default value
 
 # Run the app
 show_dashboard(db, engine, client, st.session_state.trading_mode)

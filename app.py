@@ -41,8 +41,8 @@ logger = logging.getLogger(__name__)
 
 # Import and initialize db_manager before usage
 from db import db_manager
-client = BybitClient(...)
-engine = TradingEngine(db_manager, client)
+client = BybitClient()
+engine = TradingEngine()
 trader = AutomatedTrader(engine, client)
 
 # Start trading loop in background
@@ -62,7 +62,10 @@ def format_currency_safe(value: Optional[float]) -> str:
         return "$0.00"
 
 # Ensure UTF-8 output
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+except Exception:
+    pass  # If running in an environment where fileno is not available, skip
 
 # Custom CSS
 CSS = """
@@ -165,7 +168,9 @@ def main():
 
         # Auto-refresh toggle
         auto_refresh = st.sidebar.checkbox("Auto-refresh (30s)", value=True)
-
+        # Initialize trading_mode if it doesn't exist yet
+        if "trading_mode" not in st.session_state:
+            st.session_state.trading_mode = "virtual"  # or "real", whichever default you want
         # Display selected page
         try:
             if page == "Dashboard":
@@ -201,19 +206,18 @@ def main():
 
 def init_components(trading_mode: str):
     try:
-        from db import db_manager, init_db
+        from db import db_manager
         from engine import TradingEngine
         from bybit_client import BybitClient
         from automated_trader import AutomatedTrader
 
-        init_db()
         db_manager_instance = db_manager
         engine = TradingEngine()
         # Override .env settings with the selected trading mode
         os.environ["REAL"] = "true" if trading_mode == "real" else "false"
         os.environ["VIRTUAL"] = "true" if trading_mode == "virtual" else "false"
         client = BybitClient()
-        automated_trader = AutomatedTrader(engine)
+        automated_trader = AutomatedTrader(engine, client)
 
         return db_manager_instance, engine, client, automated_trader
 

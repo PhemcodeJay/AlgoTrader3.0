@@ -166,8 +166,9 @@ def rsi(data: List[float], period: int = 14) -> float:
         delta = series.diff()
         gain = delta.where(delta > 0, 0).rolling(window=period).mean()
         loss = -delta.where(delta < 0, 0).rolling(window=period).mean()
-        rs = gain / loss if loss != 0 else np.inf
-        return 100 - (100 / (1 + rs))
+        rs = gain / loss
+        rsi_series = 100 - (100 / (1 + rs))
+        return float(rsi_series.iloc[-1]) if not rsi_series.empty else 50.0
     except Exception as e:
         logger.error(f"Error calculating RSI: {e}")
         return 50.0

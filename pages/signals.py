@@ -25,7 +25,9 @@ MAX_SYMBOLS = 50
 RSI_PERIOD = 14
 ATR_PERIOD = 14
 
-def calculate_rsi(prices: List[float], period: int = RSI_PERIOD) -> float:
+from typing import Sequence
+
+def calculate_rsi(prices: np.ndarray, period: int = RSI_PERIOD) -> float:
     """Calculate RSI from price series"""
     try:
         prices = np.array(prices)
@@ -40,7 +42,7 @@ def calculate_rsi(prices: List[float], period: int = RSI_PERIOD) -> float:
             return 100.0 if avg_gain > 0 else 50.0
         
         rs = avg_gain / avg_loss
-        return 100 - (100 / (1 + rs))
+        return float(100 - (100 / (1 + rs)))
     except Exception as e:
         logger.error(f"Error calculating RSI: {e}")
         return 50.0  # Neutral fallback
@@ -58,18 +60,19 @@ def calculate_atr(highs: List[float], lows: List[float], closes: List[float], pe
         
         if len(trs) < period:
             return 0.0
-        return np.mean(trs[-period:])
+        return float(np.mean(trs[-period:]))
     except Exception as e:
         logger.error(f"Error calculating ATR: {e}")
         return 0.0
 
-def generate_signals(client: BybitClient, symbols: List[str], interval: str = "60") -> List[Dict]:
+def generate_signals(client: BybitClient, symbols: Sequence[str], interval: str = "60") -> List[Dict]:
     """Generate signals based on market data from BybitClient using kline data"""
     try:
         signals = []
         for symbol in symbols:
             # Fetch kline data (last 200 candles for sufficient history)
-            kline_data = client.get_kline(symbol, interval, limit=200)
+            # Use the correct method to fetch kline data from BybitClient
+            kline_data = client.get_kline(symbol=symbol, interval=interval, limit=200)
             if not kline_data or len(kline_data) < RSI_PERIOD + 1:
                 logger.warning(f"Insufficient kline data for {symbol}")
                 continue
@@ -85,7 +88,7 @@ def generate_signals(client: BybitClient, symbols: List[str], interval: str = "6
                 continue
 
             # Calculate indicators
-            rsi = calculate_rsi(closes)
+            rsi = calculate_rsi(np.array(closes))
             atr = calculate_atr(highs, lows, closes)
             atr_pct = atr / current_price if current_price > 0 else 0.0
 
@@ -166,7 +169,12 @@ def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: s
         interval = st.selectbox("Interval", INTERVALS, index=1)
         if st.button("Generate Signals"):
             with st.spinner("Generating..."):
-                signals = generate_signals(client, symbols, interval)
+                # Ensure symbols is a list of strings
+                if symbols and symbols and isinstance(symbols[0], dict) and "symbol" in symbols[0]:
+                    symbols = [s["symbol"] for s in symbols]
+                elif symbols and isinstance(symbols[0], dict):
+                    symbols = [str(s) for s in symbols]
+                signals = generate_signals(client, [str(s) for s in symbols], interval)
                 if signals:
                     for signal in signals:
                         db.add_signal(signal)

@@ -120,6 +120,55 @@ class BybitClient:
             logger.error(f"Error getting symbols: {e}")
             return []
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+    def get_kline(
+        self,
+        symbol: str,
+        interval: str = "60",
+        limit: int = 200,
+        category: str = "linear"
+    ) -> List[Dict]:
+        """
+        Fetch historical kline (candlestick) data from Bybit.
+
+        Args:
+            symbol (str): Trading pair symbol (e.g., "BTCUSDT").
+            interval (str): Kline interval ("1","3","5","15","30","60","240","720","D","M","W").
+            limit (int): Number of klines (max 200).
+            category (str): Market type (linear, spot, inverse, option).
+
+        Returns:
+            List[Dict]: OHLCV candles sorted oldest → newest.
+        """
+        try:
+            url = f"{self.base_url}/v5/market/kline"
+            params = {
+                "category": category,
+                "symbol": symbol,
+                "interval": interval,
+                "limit": str(limit)
+            }
+            response = requests.get(url, params=params).json()
+            if response.get("retCode") == 0:
+                candles = [
+                    {
+                        "timestamp": int(c[0]),
+                        "open": float(c[1]),
+                        "high": float(c[2]),
+                        "low": float(c[3]),
+                        "close": float(c[4]),
+                        "volume": float(c[5])
+                    }
+                    for c in response["result"]["list"]
+                ]
+                # Ensure chronological order (Bybit often returns newest first)
+                return sorted(candles, key=lambda x: x["timestamp"])
+            logger.error(f"Error fetching kline for {symbol}: {response.get('retMsg')}")
+            return []
+        except Exception as e:
+            logger.error(f"Exception fetching kline for {symbol}: {e}")
+            return []
+
     def place_order(self, symbol: str, side: str, order_type: str, qty: float, price: float = 0.0, stop_loss: Optional[float] = None, take_profit: Optional[float] = None) -> Optional[Dict]:
         try:
             # Validate inputs
