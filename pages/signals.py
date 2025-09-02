@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import List, Dict
 from bybit_client import BybitClient
+import db
 from engine import TradingEngine
 from db import db_manager
 import pandas as pd
@@ -226,3 +227,10 @@ def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: s
 
     if st.button("🔄 Refresh Signals"):
         st.rerun()
+        
+
+db = db_manager
+client = BybitClient()
+engine = TradingEngine()  # Create an instance of TradingEngine
+trading_mode = st.session_state.get("trading_mode", "paper")  # Default to "paper" if not set
+show_signals(db, engine, client, trading_mode)
