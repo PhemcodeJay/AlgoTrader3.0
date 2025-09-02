@@ -232,5 +232,5 @@ def show_signals(db, engine: TradingEngine, client: BybitClient, trading_mode: s
 db = db_manager
 client = BybitClient()
 engine = TradingEngine()  # Create an instance of TradingEngine
-trading_mode = st.session_state.get("trading_mode", "paper")  # Default to "paper" if not set
+trading_mode = st.session_state.get("trading_mode", "virtual")  # Default to "virtual" if not set
 show_signals(db, engine, client, trading_mode)
